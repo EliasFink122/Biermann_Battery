@@ -116,25 +116,30 @@ if __name__ == "__main__":
     beam_sh = lambda xyz: beam(xyz, amp = AMP, spec_amp = SPEC_AMP, width = WIDTH)
 
     NUM = 20
+    NUMZ = 10
     xs = np.linspace(-1.5*WIDTH, 1.5*WIDTH, NUM)
+    zs = np.linspace(0, 1.5*DECAY_LENGTH, NUMZ)
 
-    bf = np.zeros((NUM, NUM, NUM, 3))
+    bf = np.zeros((NUM, NUM, NUMZ, 3))
     for i, x in enumerate(xs):
         for j, y in enumerate(xs):
-            for k, z in enumerate(xs):
+            for k, z in enumerate(zs):
                 bf[i, j, k] = biermann_field(xyz = [x, y, z], beam_shape = beam_sh,
                                     density_func = density_distr)
 
-    beam_arr = np.zeros((len(xs), len(xs)))
-    for i, x in enumerate(xs):
-        for j, y in enumerate(xs):
+    NUMB = 50
+    beam_xs = np.linspace(-1.5*WIDTH, 1.5*WIDTH, NUMB)
+    beam_arr = np.zeros((len(beam_xs), len(beam_xs)))
+    for i, x in enumerate(beam_xs):
+        for j, y in enumerate(beam_xs):
             beam_arr[i, j] = beam_sh([x, y, 0])
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    x, y, z = np.meshgrid(xs, xs, xs)
-    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=20, linewidth = 2)
-    x, y = np.meshgrid(xs, xs)
+    x, y, z = np.meshgrid(xs, xs, zs)
+    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=20,
+              linewidth = 2, arrow_length_ratio = 0.3)
+    x, y = np.meshgrid(beam_xs, beam_xs)
     ax.plot_surface(x, y, beam_arr, cmap = "Oranges")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
