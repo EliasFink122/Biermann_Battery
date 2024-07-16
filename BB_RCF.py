@@ -7,23 +7,22 @@ Integrate magnetic field to find proton beam path.
 """
 import numpy as np
 from BB_Simple import beam, density, biermann_field
-from scipy.constants import k, elementary_charge as e, proton_mass as m_p
+from scipy.constants import elementary_charge as e, proton_mass as m_p
 import matplotlib.pyplot as plt
 
-def maxwell(num = 1, temp = 1e7) -> np.ndarray:
+def maxwell(temp = 1e7) -> np.ndarray:
     '''
     Randomly Maxwellian-distributed values
 
     Args:
-        num: number of values to generate
         temp: temperature in eV
 
     Returns:
         array with num values
     '''
-    vx = np.random.normal(size=num)
-    vy = np.random.normal(size=num)
-    vz = np.random.normal(size=num)
+    vx = np.random.normal()
+    vy = np.random.normal()
+    vz = np.random.normal()
     return np.sqrt((vx*vx + vy*vy + vz*vz)*(temp*e/m_p))
 
 class Proton():
@@ -33,8 +32,8 @@ class Proton():
     def __init__(self, pos = [0., 0., 1.], vel = [0., 0., -1.]):
         '''
         Args:
-            pos: initial proton position
-            vel: initial proton velocity
+            pos: initial proton position (by default 1 m above target surface)
+            vel: initial proton velocity (by default 1 m/s towards target surface)
         '''
         self.__pos = np.array(pos)
         self.__vel = np.array(vel)
@@ -58,8 +57,8 @@ class Proton():
         '''
         Moves proton and updated velocity
         '''
-        self.__pos += dt*self.__vel
-        self.__vel += dt*e/m_p*np.cross(self.__vel, b_field)
+        self.__pos = self.__pos + dt*self.__vel
+        self.__vel = self.__vel + dt*e/m_p*np.cross(self.__vel, b_field)
 
 class ProtonBeam():
     '''
@@ -81,8 +80,11 @@ class ProtonBeam():
         self.__protons: list[Proton] = []
         temperature *= 1e6
         for _ in range(n_protons):
-            v_z = maxwell(temp = temperature)[0]
-            self.__protons.append(Proton(vel = [0, 0, -v_z]))
+            v = maxwell(temp = temperature)
+            spread = np.random.rand()*np.pi/50
+            traj = np.random.rand()*2*np.pi
+            vel = [v*np.sin(spread)*np.cos(traj), v*np.sin(spread)*np.sin(traj), -v*np.cos(spread)]
+            self.__protons.append(Proton(pos = [0, 0, 1], vel = vel))
     def protons(self) -> list:
         '''
         Proton array
@@ -108,7 +110,6 @@ class ProtonBeam():
         plt.xlabel("Speed [m/s]")
         plt.ylabel("Frequency")
         plt.show()
-
     def propagate(self):
         '''
         Propagate proton beam along
@@ -141,7 +142,7 @@ class ProtonBeam():
                     width = ProtonBeam.WIDTH)
     def send_beam(self, plot = True) -> np.ndarray:
         '''
-        Send beam through magnetic field
+        Send beam through magnetic field and record on RCF behind target.
 
         Args:
             plot: whether to plot
@@ -153,17 +154,19 @@ class ProtonBeam():
         while True:
             self.propagate()
             for i, proton in enumerate(self.__protons):
-                print(proton.pos()[2])
                 if proton.pos()[2] <= 0:
                     positions.append(proton.pos()[:2])
                     self.__protons.pop(i)
+                elif proton.vel()[2] >= 0:
+                    self.__protons.pop(i)
+                    print("Warning: Proton moving backwards")
             if len(self.__protons) == 0:
                 break
         positions = np.array(positions)
         if plot:
             plt.figure()
             plt.title("Simulated RCF")
-            plt.hist2d(positions[:, 0], positions[:, 1], bins = 10)
+            plt.hist2d(positions[:, 0], positions[:, 1], bins = 100)
             plt.xlabel("x")
             plt.ylabel("y")
             plt.savefig("RCF.png", dpi = 1000)
@@ -171,6 +174,6 @@ class ProtonBeam():
         return positions
 
 if __name__ == "__main__":
-    sample_beam = ProtonBeam(100, 10)
-    # sample_beam.plot_spectrum()
+    sample_beam = ProtonBeam(1000, 10)
+    sample_beam.plot_spectrum()
     position_arr = sample_beam.send_beam()
