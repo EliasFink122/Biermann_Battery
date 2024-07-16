@@ -38,7 +38,7 @@ def beam(xyz, amp, spec_amp, width) -> float:
 
     # Specs
     spec_loc = 1/2 # fraction of width
-    spec_size = 1/5 # fraction of width
+    spec_size = 1/4 # fraction of width
     spec1_pos = np.array([-width*spec_loc, 0])
     spec2_pos = np.array([width*spec_loc, 0])
     spec1 = spec_amp * np.exp(-(np.linalg.norm(xy - spec1_pos)**2/(2*(width*spec_size)**2))**5)
@@ -125,11 +125,17 @@ if __name__ == "__main__":
                 bf[i, j, k] = biermann_field(xyz = [x, y, z], beam_shape = beam_sh,
                                     density_func = density_distr)
 
+    beam_arr = np.zeros((len(xs), len(xs)))
+    for i, x in enumerate(xs):
+        for j, y in enumerate(xs):
+            beam_arr[i, j] = beam_sh([x, y, 0])
+
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     x, y, z = np.meshgrid(xs, xs, xs)
     ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=20, linewidth = 2)
     x, y = np.meshgrid(xs, xs)
+    ax.plot_surface(x, y, beam_arr, cmap = "Oranges")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
