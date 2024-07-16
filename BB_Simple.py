@@ -59,26 +59,25 @@ def density(xyz, rho0, decay_length) -> float:
         return rho0
     return rho0 * np.exp(-z/decay_length)
 
-def grad(func, coord, *args) -> np.array:
+def grad(func, coord) -> np.array:
     '''
     Gradient of function.
 
     Args:
         func: function of interest
         coord: position of gradient
-        *args: other arguments of function
 
     Returns:
         gradient at position
     '''
-    res = 1e-3
+    res = 1e-2
     gradient = [0, 0, 0]
     for l in range(3):
-        arr1, arr2 = (coord, coord)
-        arr1[l] -= res
-        arr2[l] += res
+        coord = np.array(coord)
+        dx = np.zeros(3)
+        dx[l] = res
 
-        diff = (func(arr2, *args) - func(arr1, *args))/(2*res)
+        diff = (func(coord + dx) - func(coord - dx))/(2*res)
         gradient[l] = diff
     return gradient
 
@@ -104,7 +103,7 @@ def biermann_field(xyz, beam_shape, density_func) -> np.array:
 if __name__ == "__main__":
     # Parameters
     RHO0 = 1
-    DECAY_LENGTH = 1
+    DECAY_LENGTH = 10
     AMP = 10
     SPEC_AMP = 1
     WIDTH = 10
@@ -112,8 +111,9 @@ if __name__ == "__main__":
     density_distr = lambda xyz: density(xyz, rho0 = RHO0, decay_length = DECAY_LENGTH)
     beam_sh = lambda xyz: beam(xyz, amp = AMP, spec_amp = SPEC_AMP, width = WIDTH)
 
-    NUM = 20
+    NUM = 10
     xs = np.linspace(-1.5*WIDTH, 1.5*WIDTH, NUM)
+
     bf = np.zeros((NUM, NUM, NUM, 3))
     for i, x in enumerate(xs):
         for j, y in enumerate(xs):
@@ -124,6 +124,5 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     x, y, z = np.meshgrid(xs, xs, xs)
-    print(bf)
-    ax.quiver(x, y, z, bf[:, :, :, 0], bf[:, :, :, 1], bf[:, :, :, 2], length=1)
+    ax.quiver(x, y, z, bf[:, :, :, 0], bf[:, :, :, 1], bf[:, :, :, 2], length=50, linewidth = 2)
     plt.show()
