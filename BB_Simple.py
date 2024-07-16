@@ -24,10 +24,10 @@ def beam(xyz, amp, spec_amp, width) -> float:
     Beam intensity function based on super Gaussian.
 
     Args:
-        xy: 2-d position in beam in mm
+        xy: 2-d position in beam in m
         amp: amplitude of beam in J
         spec_amp: amplitude of specles in J
-        width: standard deviation of beam Gaussian in mm
+        width: standard deviation of beam Gaussian in m
 
     Returns:
         beam intensity at xy location in J
@@ -51,7 +51,7 @@ def density(xyz, rho0, decay_length) -> float:
     Density decay function.
 
     Args:
-        z: distance away from target surface in mm
+        z: distance away from target surface in m
         rho0: maximum density at surface
         decay_length: length scale over which density decays by factor of 1/e
 

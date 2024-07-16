@@ -24,13 +24,18 @@ def maxwell(num = 1, temp = 1e7) -> np.ndarray:
     vx = np.random.normal(size=num)
     vy = np.random.normal(size=num)
     vz = np.random.normal(size=num)
-    return np.sqrt((vx*vx + vy*vy + vz*vz)*(temp*1.16e10*k/m_p))
+    return np.sqrt((vx*vx + vy*vy + vz*vz)*(temp*e/m_p))
 
 class Proton():
     '''
     Proton base class
     '''
-    def __init__(self, pos = [0., 0., 10.], vel = [0., 0., -1.]):
+    def __init__(self, pos = [0., 0., 1.], vel = [0., 0., -1.]):
+        '''
+        Args:
+            pos: initial proton position
+            vel: initial proton velocity
+        '''
         self.__pos = np.array(pos)
         self.__vel = np.array(vel)
     def pos(self) -> np.ndarray:
@@ -61,13 +66,18 @@ class ProtonBeam():
     Proton beam
     '''
     RHO0 = 1
-    DECAY_LENGTH = 10
+    DECAY_LENGTH = 0.1
     AMP = 10
     SPEC_AMP = 1
-    WIDTH = 10
+    WIDTH = 0.1
     TIME_INCREMEMT = 1e-10
 
     def __init__(self, n_protons = 100, temperature = 10):
+        '''
+        Args:
+            n_protons: number of protons
+            temperature: proton temperature in MeV
+        '''
         self.__protons: list[Proton] = []
         temperature *= 1e6
         for _ in range(n_protons):
@@ -143,7 +153,7 @@ class ProtonBeam():
         while True:
             self.propagate()
             for i, proton in enumerate(self.__protons):
-                #print(proton.pos()[2])
+                print(proton.pos()[2])
                 if proton.pos()[2] <= 0:
                     positions.append(proton.pos()[:2])
                     self.__protons.pop(i)
@@ -161,6 +171,6 @@ class ProtonBeam():
         return positions
 
 if __name__ == "__main__":
-    sample_beam = ProtonBeam(10000, 10)
-    sample_beam.plot_spectrum()
-    # position_arr = sample_beam.send_beam()
+    sample_beam = ProtonBeam(100, 10)
+    # sample_beam.plot_spectrum()
+    position_arr = sample_beam.send_beam()
