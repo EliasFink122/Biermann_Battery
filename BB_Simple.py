@@ -10,6 +10,10 @@ Methods:
         defines beam shape
     density:
         defines density profile of plasma
+    grad:
+        finds gradient vector of scalar field
+    biermann_field:
+        finds magnetic field given density and beam fields
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,7 +22,7 @@ from mpl_toolkits.mplot3d import axes3d
 def beam(xyz, amp, spec_amp, width) -> float:
     '''
     Beam intensity function based on super Gaussian.
-    
+
     Args:
         xy: 2-d position in beam in mm
         amp: amplitude of beam in J
@@ -37,8 +41,8 @@ def beam(xyz, amp, spec_amp, width) -> float:
     spec_size = 1/5 # fraction of width
     spec1_pos = np.array([-width*spec_loc, 0])
     spec2_pos = np.array([width*spec_loc, 0])
-    spec1 = spec_amp * np.exp(-np.linalg.norm(xy - spec1_pos)**2/(2*(width*spec_size)**2)**5)
-    spec2 = spec_amp * np.exp(-np.linalg.norm(xy - spec2_pos)**2/(2*(width*spec_size)**2)**5)
+    spec1 = spec_amp * np.exp(-(np.linalg.norm(xy - spec1_pos)**2/(2*(width*spec_size)**2))**5)
+    spec2 = spec_amp * np.exp(-(np.linalg.norm(xy - spec2_pos)**2/(2*(width*spec_size)**2))**5)
 
     return base_beam + spec1 + spec2
 
@@ -70,7 +74,7 @@ def grad(func, coord) -> np.array:
     Returns:
         gradient at position
     '''
-    res = 1e-2
+    res = 1e-1
     gradient = [0, 0, 0]
     for l in range(3):
         coord = np.array(coord)
@@ -111,7 +115,7 @@ if __name__ == "__main__":
     density_distr = lambda xyz: density(xyz, rho0 = RHO0, decay_length = DECAY_LENGTH)
     beam_sh = lambda xyz: beam(xyz, amp = AMP, spec_amp = SPEC_AMP, width = WIDTH)
 
-    NUM = 10
+    NUM = 20
     xs = np.linspace(-1.5*WIDTH, 1.5*WIDTH, NUM)
 
     bf = np.zeros((NUM, NUM, NUM, 3))
@@ -124,5 +128,9 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     x, y, z = np.meshgrid(xs, xs, xs)
-    ax.quiver(x, y, z, bf[:, :, :, 0], bf[:, :, :, 1], bf[:, :, :, 2], length=50, linewidth = 2)
+    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=20, linewidth = 2)
+    x, y = np.meshgrid(xs, xs)
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
     plt.show()
