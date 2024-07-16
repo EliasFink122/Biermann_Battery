@@ -13,8 +13,9 @@ Methods:
 """
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import axes3d
 
-def beam(xy, amp, spec_amp, width) -> float:
+def beam(xyz, amp, spec_amp, width) -> float:
     '''
     Beam intensity function based on super Gaussian.
     
@@ -27,7 +28,7 @@ def beam(xy, amp, spec_amp, width) -> float:
     Returns:
         beam intensity at xy location in J
     '''
-    xy = np.array(xy)
+    xy = np.array(xyz[:2])
     # Base beam
     base_beam = amp * np.exp(-(np.linalg.norm(xy)**2/(2*width**2))**5)
 
@@ -41,7 +42,7 @@ def beam(xy, amp, spec_amp, width) -> float:
 
     return base_beam + spec1 + spec2
 
-def density(z, rho0, decay_length) -> float:
+def density(xyz, rho0, decay_length) -> float:
     '''
     Density decay function.
 
@@ -53,6 +54,7 @@ def density(z, rho0, decay_length) -> float:
     Returns:
         density at z location in kg/m^3
     '''
+    z = xyz[2]
     if z <= 0:
         return rho0
     return rho0 * np.exp(-z/decay_length)
@@ -70,16 +72,14 @@ def grad(func, coord, *args) -> np.array:
         gradient at position
     '''
     res = 1e-3
-    gradient = []
-    if isinstance(coord, (int, float)):
-        coord = [coord]
-    for i, _ in enumerate(coord):
-        arr1, arr2 = np.array(coord), np.array(coord)
-        arr1[i] -= res
-        arr2[i] += res
+    gradient = [0, 0, 0]
+    for l in range(3):
+        arr1, arr2 = (coord, coord)
+        arr1[l] -= res
+        arr2[l] += res
 
         diff = (func(arr2, *args) - func(arr1, *args))/(2*res)
-        gradient.append(diff)
+        gradient[l] = diff
     return gradient
 
 def biermann_field(xyz, beam_shape, density_func) -> np.array:
@@ -95,8 +95,8 @@ def biermann_field(xyz, beam_shape, density_func) -> np.array:
         magnetic field
     '''
     temperature = beam_shape
-    grad_density = np.array([0, 0] + grad(density_func, xyz[2]))
-    grad_temp = np.array(grad(temperature, xyz[:2]) + [0])
+    grad_density = np.array(grad(density_func, xyz))
+    grad_temp = np.array(grad(temperature, xyz))
     magnetic_field = np.cross(grad_density, grad_temp)
 
     return magnetic_field
@@ -109,6 +109,21 @@ if __name__ == "__main__":
     SPEC_AMP = 1
     WIDTH = 10
 
+    density_distr = lambda xyz: density(xyz, rho0 = RHO0, decay_length = DECAY_LENGTH)
+    beam_sh = lambda xyz: beam(xyz, amp = AMP, spec_amp = SPEC_AMP, width = WIDTH)
 
-    density_distr = lambda z: density(z, rho0 = RHO0, decay_length = DECAY_LENGTH)
-    beam_sh = lambda xy: beam(xy, amp = AMP, spec_amp = SPEC_AMP, width = WIDTH)
+    NUM = 20
+    xs = np.linspace(-1.5*WIDTH, 1.5*WIDTH, NUM)
+    bf = np.zeros((NUM, NUM, NUM, 3))
+    for i, x in enumerate(xs):
+        for j, y in enumerate(xs):
+            for k, z in enumerate(xs):
+                bf[i, j, k] = biermann_field(xyz = [x, y, z], beam_shape = beam_sh,
+                                    density_func = density_distr)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    x, y, z = np.meshgrid(xs, xs, xs)
+    print(bf)
+    ax.quiver(x, y, z, bf[:, :, :, 0], bf[:, :, :, 1], bf[:, :, :, 2], length=1)
+    plt.show()
