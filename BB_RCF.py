@@ -1,5 +1,5 @@
 """
-Created on Mon Jul 15 2024
+Created on Tue Jul 16 2024
 
 @author: Elias Fink (elias.fink22@imperial.ac.uk)
 
@@ -7,8 +7,7 @@ Integrate magnetic field to find proton beam path.
 """
 import numpy as np
 from BB_Simple import beam, density, biermann_field
-from scipy.constants import k, elementary_charge as e
-from scipy.constants import proton_mass as m_p
+from scipy.constants import k, elementary_charge as e, proton_mass as m_p
 import matplotlib.pyplot as plt
 
 def maxwell(num = 1, temp = 1e7) -> np.ndarray:
@@ -25,7 +24,7 @@ def maxwell(num = 1, temp = 1e7) -> np.ndarray:
     vx = np.random.normal(size=num)
     vy = np.random.normal(size=num)
     vz = np.random.normal(size=num)
-    return np.sqrt((vx*vx + vy*vy + vz*vz)*(temp/e*k/m_p))
+    return np.sqrt((vx*vx + vy*vy + vz*vz)*(temp*1.16e10*k/m_p))
 
 class Proton():
     '''
@@ -74,7 +73,6 @@ class ProtonBeam():
         for _ in range(n_protons):
             v_z = maxwell(temp = temperature)[0]
             self.__protons.append(Proton(vel = [0, 0, -v_z]))
-            print(v_z)
     def protons(self) -> list:
         '''
         Proton array
@@ -83,6 +81,24 @@ class ProtonBeam():
             array of proton objects
         '''
         return self.__protons
+    def plot_spectrum(self, bins = 100):
+        '''
+        Plot proton speed spectrum.
+
+        Args:
+            bins: number of bins in histogram
+        '''
+        speeds = []
+        for proton in self.__protons:
+            speeds.append(np.linalg.norm(proton.vel()))
+
+        plt.figure()
+        plt.title("Proton speed spectrum")
+        plt.hist(speeds, bins = bins)
+        plt.xlabel("Speed [m/s]")
+        plt.ylabel("Frequency")
+        plt.show()
+
     def propagate(self):
         '''
         Propagate proton beam along
@@ -107,21 +123,24 @@ class ProtonBeam():
 
         Args:
             xyz: 3-d position
-        
+
         Returns:
             beam intensity value
         '''
         return beam(xyz, amp = ProtonBeam.AMP, spec_amp = ProtonBeam.SPEC_AMP,
                     width = ProtonBeam.WIDTH)
-    def send_beam(self, max_iter = 1e6) -> np.ndarray:
+    def send_beam(self, plot = True) -> np.ndarray:
         '''
         Send beam through magnetic field
+
+        Args:
+            plot: whether to plot
 
         Returns:
             final positions of protons
         '''
         positions = []
-        for _ in range(int(max_iter)):
+        while True:
             self.propagate()
             for i, proton in enumerate(self.__protons):
                 #print(proton.pos()[2])
@@ -130,10 +149,18 @@ class ProtonBeam():
                     self.__protons.pop(i)
             if len(self.__protons) == 0:
                 break
-        return np.array(positions)
+        positions = np.array(positions)
+        if plot:
+            plt.figure()
+            plt.title("Simulated RCF")
+            plt.hist2d(positions[:, 0], positions[:, 1], bins = 10)
+            plt.xlabel("x")
+            plt.ylabel("y")
+            plt.savefig("RCF.png", dpi = 1000)
+            plt.show()
+        return positions
 
 if __name__ == "__main__":
-    sample_beam = ProtonBeam(2, 10)
-    position_arr = sample_beam.send_beam()
-    plt.hist2d(position_arr[:, 0], position_arr[:, 1], bins = 10)
-    plt.plot()
+    sample_beam = ProtonBeam(10000, 10)
+    sample_beam.plot_spectrum()
+    # position_arr = sample_beam.send_beam()
