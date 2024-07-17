@@ -81,11 +81,13 @@ class ProtonBeam():
         self.__protons: list[Proton] = []
         temperature *= 1e6
         for _ in range(n_protons):
-            v = maxwell(temp = temperature)
+            origin = [0, 0, 1]
+            speed = maxwell(temp = temperature)
             spread = np.random.rand()*np.pi/20
             traj = np.random.rand()*2*np.pi
-            vel = [v*np.sin(spread)*np.cos(traj), v*np.sin(spread)*np.sin(traj), -v*np.cos(spread)]
-            self.__protons.append(Proton(pos = [0, 0, 1], vel = vel))
+            vel = [speed*np.sin(spread)*np.cos(traj), speed*np.sin(spread)*np.sin(traj),
+                   -speed*np.cos(spread)]
+            self.__protons.append(Proton(pos = origin, vel = vel))
     def protons(self) -> list:
         '''
         Proton array
