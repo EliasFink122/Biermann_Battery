@@ -170,9 +170,9 @@ class ProtonBeam():
         if plot:
             plt.figure()
             plt.title("Simulated RCF")
-            plt.hist2d(positions[:, 0], positions[:, 1], bins = 1000)
-            plt.xlabel("x")
-            plt.ylabel("y")
+            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 1000)
+            plt.xlabel("x [mm]")
+            plt.ylabel("y [mm]")
             plt.savefig("RCF.png", dpi = 1000)
             plt.show()
         return positions
