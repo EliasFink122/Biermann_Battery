@@ -159,8 +159,7 @@ class ProtonBeam():
                 if proton.pos()[2] <= 0:
                     detected += 1
                     print(f"Proton {detected} detected.")
-                    if np.abs(proton.pos()[0]) < 3 and np.abs(proton.pos()[1]) < 3:
-                        positions.append(proton.pos()[:2])
+                    positions.append(proton.pos()[:2])
                     self.__protons.pop(i)
                 elif proton.vel()[2] >= 0:
                     self.__protons.pop(i)
@@ -171,7 +170,7 @@ class ProtonBeam():
         if plot:
             plt.figure()
             plt.title("Simulated RCF")
-            plt.hist2d(positions[:, 0], positions[:, 1], bins = 100)
+            plt.hist2d(positions[:, 0], positions[:, 1], bins = 1000)
             plt.xlabel("x")
             plt.ylabel("y")
             plt.savefig("RCF.png", dpi = 1000)
@@ -179,6 +178,6 @@ class ProtonBeam():
         return positions
 
 if __name__ == "__main__":
-    sample_beam = ProtonBeam(100, 10)
+    sample_beam = ProtonBeam(10000, 10)
     sample_beam.plot_spectrum()
     position_arr = sample_beam.send_beam()
