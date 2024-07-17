@@ -217,12 +217,12 @@ class ProtonBeam():
             proton = self.propagate_one(proton)
             if proton.pos()[2] <= 0:
                 if np.abs(proton.pos()[0]) < 0.3 and np.abs(proton.pos()[1]) < 0.3:
-                    print("Proton detected.")
+                    print(f"Proton detected at {proton.pos()[:2]}.")
                     return proton.pos()[:2]
-                return
+                return None
             if proton.vel()[2] >= 0:
                 print("Warning: Proton moving backwards")
-                return
+                return None
     def send_beam_mp(self, plot = True) -> np.ndarray:
         '''
         Send beam through magnetic field and record on RCF behind target using multiprocessing.
@@ -238,9 +238,6 @@ class ProtonBeam():
         for i, pos in enumerate(positions):
             if pos is None:
                 positions.pop(i)
-            if len(pos) != 2:
-                print(pos)
-                positions.pop(i)
         positions = np.array(positions)
         if plot:
             plt.figure()
@@ -252,7 +249,6 @@ class ProtonBeam():
             plt.savefig("RCF.png", dpi = 1000)
             plt.show()
         return positions
-
 
 if __name__ == "__main__":
     sample_beam = ProtonBeam(1e4, 10, 'even')
