@@ -82,7 +82,7 @@ class ProtonBeam():
         '''
         self.__protons: list[Proton] = []
         temperature *= 1e6
-        for _ in range(n_protons):
+        for _ in range(int(n_protons)):
             origin = [0, 0, 1]
             speed = maxwell(temp = temperature)
             if distribution == 'even':
@@ -131,34 +131,6 @@ class ProtonBeam():
         plt.ylabel("y [mm]")
         plt.colorbar(label = "Frequency")
         plt.show()
-    def propagate_one(self, proton: Proton) -> Proton:
-        '''
-        Propagate one proton by one time step
-        '''
-        magnetic = biermann_field(proton.pos(), self.beam_sh, self.density_distr)
-        proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
-        return proton
-    def shoot_at_target(self, proton: Proton) -> list[float]:
-        '''
-        Shoot one proton at target
-        '''
-        while True:
-            proton = self.propagate_one(proton)
-            if proton.pos()[2] <= 0:
-                if np.abs(proton.pos()[0]) < 0.3 and np.abs(proton.pos()[1]) < 0.3:
-                    print("Proton detected.")
-                    return proton.pos()[:2]
-                return
-            if proton.vel()[2] >= 0:
-                print("Warning: Proton moving backwards")
-                return
-    def propagate(self):
-        '''
-        Propagate proton beam along
-        '''
-        for proton in self.__protons:
-            magnetic = biermann_field(proton.pos(), self.beam_sh, self.density_distr)
-            proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
     def density_distr(self, xyz):
         '''
         Density distribution
@@ -182,6 +154,15 @@ class ProtonBeam():
         '''
         return beam(xyz, amp = ProtonBeam.AMP, spec_amp = ProtonBeam.SPEC_AMP,
                     width = ProtonBeam.WIDTH)
+
+    # Single core processing
+    def propagate(self):
+        '''
+        Propagate proton beam along
+        '''
+        for proton in self.__protons:
+            magnetic = biermann_field(proton.pos(), self.beam_sh, self.density_distr)
+            proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
     def send_beam(self, plot = True) -> np.ndarray:
         '''
         Send beam through magnetic field and record on RCF behind target.
@@ -219,6 +200,29 @@ class ProtonBeam():
             plt.savefig("RCF.png", dpi = 1000)
             plt.show()
         return positions
+
+    # Multi core processing
+    def propagate_one(self, proton: Proton) -> Proton:
+        '''
+        Propagate one proton by one time step
+        '''
+        magnetic = biermann_field(proton.pos(), self.beam_sh, self.density_distr)
+        proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
+        return proton
+    def shoot_at_target(self, proton: Proton) -> list[float]:
+        '''
+        Shoot one proton at target
+        '''
+        while True:
+            proton = self.propagate_one(proton)
+            if proton.pos()[2] <= 0:
+                if np.abs(proton.pos()[0]) < 0.3 and np.abs(proton.pos()[1]) < 0.3:
+                    print("Proton detected.")
+                    return proton.pos()[:2]
+                return
+            if proton.vel()[2] >= 0:
+                print("Warning: Proton moving backwards")
+                return
     def send_beam_mp(self, plot = True) -> np.ndarray:
         '''
         Send beam through magnetic field and record on RCF behind target using multiprocessing.
@@ -234,6 +238,9 @@ class ProtonBeam():
         for i, pos in enumerate(positions):
             if pos is None:
                 positions.pop(i)
+            if len(pos) != 2:
+                print(pos)
+                positions.pop(i)
         positions = np.array(positions)
         if plot:
             plt.figure()
@@ -248,6 +255,6 @@ class ProtonBeam():
 
 
 if __name__ == "__main__":
-    sample_beam = ProtonBeam(100, 10, 'even')
+    sample_beam = ProtonBeam(1e4, 10, 'even')
     sample_beam.plot_spectrum()
     position_arr = sample_beam.send_beam_mp()
