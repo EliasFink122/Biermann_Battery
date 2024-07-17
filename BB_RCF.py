@@ -9,6 +9,7 @@ import numpy as np
 from BB_Simple import beam, density, biermann_field
 from scipy.constants import elementary_charge as e, proton_mass as m_p
 import matplotlib.pyplot as plt
+from multiprocessing import Pool
 
 def maxwell(temp = 1e7) -> np.ndarray:
     '''
@@ -113,13 +114,18 @@ class ProtonBeam():
         plt.xlabel("Speed [m/s]")
         plt.ylabel("Frequency")
         plt.show()
+    def propagate_one(self, i):
+        '''
+        Propagate one proton by one time step
+        '''
+        magnetic = biermann_field(self.__protons[i].pos(), self.beam_sh, self.density_distr)
+        self.__protons[i].move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
     def propagate(self):
         '''
-        Propagate proton beam along
+        Propagate whole proton beam along by one time step
         '''
-        for proton in self.__protons:
-            magnetic = biermann_field(proton.pos(), self.beam_sh, self.density_distr)
-            proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
+        with Pool() as pool:
+            pool.map(self.propagate_one, range(len(self.__protons)))
     def density_distr(self, xyz):
         '''
         Density distribution
@@ -161,7 +167,8 @@ class ProtonBeam():
                 if proton.pos()[2] <= 0:
                     detected += 1
                     print(f"Proton {detected} detected.")
-                    positions.append(proton.pos()[:2])
+                    if np.abs(proton.pos()[0]) < 0.15 and np.abs(proton.pos()[1]) < 0.15:
+                        positions.append(proton.pos()[:2])
                     self.__protons.pop(i)
                 elif proton.vel()[2] >= 0:
                     self.__protons.pop(i)
@@ -180,6 +187,6 @@ class ProtonBeam():
         return positions
 
 if __name__ == "__main__":
-    sample_beam = ProtonBeam(10000, 10)
+    sample_beam = ProtonBeam(100, 10)
     sample_beam.plot_spectrum()
     position_arr = sample_beam.send_beam()
