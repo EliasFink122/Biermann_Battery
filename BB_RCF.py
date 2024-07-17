@@ -178,15 +178,18 @@ class ProtonBeam():
         while True:
             self.propagate()
             for i, proton in enumerate(self.__protons):
+                for_removal = []
                 if proton.pos()[2] <= 0:
                     if np.abs(proton.pos()[0]) < 0.3 and np.abs(proton.pos()[1]) < 0.3:
                         detected += 1
                         print(f"Proton {detected} detected.")
                         positions.append(proton.pos()[:2])
-                    self.__protons.pop(i)
+                    for_removal.append(i)
                 elif proton.vel()[2] >= 0:
-                    self.__protons.pop(i)
+                    for_removal.append(i)
                     print("Warning: Proton moving backwards")
+            for i in reversed(for_removal):
+                self.__protons.pop(i)
             if len(self.__protons) == 0:
                 break
         positions = np.array(positions)
@@ -235,14 +238,20 @@ class ProtonBeam():
         '''
         with Pool() as pool:
             positions = pool.map(self.shoot_at_target, self.__protons)
+
+        # Remove None values
+        for_removal = []
         for i, pos in enumerate(positions):
-            if pos is None:
-                positions.pop(i)
+            if pos is None or None in pos:
+                for_removal.append(i)
+        for i in reversed(for_removal):
+            positions.pop(i)
+
         positions = np.array(positions)
         if plot:
             plt.figure()
             plt.title("Simulated RCF")
-            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 100)
+            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 500)
             plt.xlabel("x [mm]")
             plt.ylabel("y [mm]")
             plt.colorbar(label = "Frequency")
@@ -251,6 +260,6 @@ class ProtonBeam():
         return positions
 
 if __name__ == "__main__":
-    sample_beam = ProtonBeam(1e4, 10, 'even')
-    sample_beam.plot_spectrum()
+    sample_beam = ProtonBeam(1e5, 10, 'even')
+    sample_beam.plot_spectrum(500)
     position_arr = sample_beam.send_beam_mp()
