@@ -9,6 +9,7 @@ import numpy as np
 from BB_Simple import beam, density, biermann_field
 from scipy.constants import elementary_charge as e, proton_mass as m_p
 import matplotlib.pyplot as plt
+from multiprocessing import Pool
 
 def maxwell(temp = 1e7) -> np.ndarray:
     '''
@@ -130,6 +131,27 @@ class ProtonBeam():
         plt.ylabel("y [mm]")
         plt.colorbar(label = "Frequency")
         plt.show()
+    def propagate_one(self, proton: Proton) -> Proton:
+        '''
+        Propagate one proton by one time step
+        '''
+        magnetic = biermann_field(proton.pos(), self.beam_sh, self.density_distr)
+        proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
+        return proton
+    def shoot_at_target(self, proton: Proton) -> list[float]:
+        '''
+        Shoot one proton at target
+        '''
+        while True:
+            proton = self.propagate_one(proton)
+            if proton.pos()[2] <= 0:
+                if np.abs(proton.pos()[0]) < 0.3 and np.abs(proton.pos()[1]) < 0.3:
+                    print("Proton detected.")
+                    return proton.pos()[:2]
+                return
+            if proton.vel()[2] >= 0:
+                print("Warning: Proton moving backwards")
+                return
     def propagate(self):
         '''
         Propagate proton beam along
@@ -148,7 +170,7 @@ class ProtonBeam():
             density value
         '''
         return density(xyz, rho0 = ProtonBeam.RHO0, decay_length = ProtonBeam.DECAY_LENGTH)
-    def beam_sh(self, xyz):
+    def beam_sh(self, xyz) -> float:
         '''
         Beam shape
 
@@ -197,8 +219,35 @@ class ProtonBeam():
             plt.savefig("RCF.png", dpi = 1000)
             plt.show()
         return positions
+    def send_beam_mp(self, plot = True) -> np.ndarray:
+        '''
+        Send beam through magnetic field and record on RCF behind target using multiprocessing.
+
+        Args:
+            plot: whether to plot
+
+        Returns:
+            final positions of protons
+        '''
+        with Pool() as pool:
+            positions = pool.map(self.shoot_at_target, self.__protons)
+        for i, pos in enumerate(positions):
+            if pos is None:
+                positions.pop(i)
+        positions = np.array(positions)
+        if plot:
+            plt.figure()
+            plt.title("Simulated RCF")
+            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 100)
+            plt.xlabel("x [mm]")
+            plt.ylabel("y [mm]")
+            plt.colorbar(label = "Frequency")
+            plt.savefig("RCF.png", dpi = 1000)
+            plt.show()
+        return positions
+
 
 if __name__ == "__main__":
-    sample_beam = ProtonBeam(5000, 10, 'even')
+    sample_beam = ProtonBeam(100, 10, 'even')
     sample_beam.plot_spectrum()
-    position_arr = sample_beam.send_beam()
+    position_arr = sample_beam.send_beam_mp()
