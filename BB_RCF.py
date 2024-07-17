@@ -53,23 +53,24 @@ class Proton():
             proton velocity array
         '''
         return self.__vel
-    def move(self, dt, b_field) -> np.ndarray:
+    def move(self, dt, b_field, e_field = [0, 0, 0]) -> np.ndarray:
         '''
         Moves proton and updated velocity
         '''
         self.__pos = self.__pos + dt*self.__vel
-        self.__vel = self.__vel + dt*e/m_p*np.cross(self.__vel, b_field)
+        self.__vel = self.__vel + dt*e/m_p*(np.array(e_field) + np.cross(self.__vel, b_field))
 
 class ProtonBeam():
     '''
     Proton beam
     '''
-    RHO0 = 1
-    DECAY_LENGTH = 0.1
-    AMP = 10
-    SPEC_AMP = 1
-    WIDTH = 0.1
-    TIME_INCREMEMT = 1e-10
+    RHO0 = 1 # base density
+    DECAY_LENGTH = 0.1 # density decay length scale
+    AMP = 0.1 # beam amplitude
+    SPEC_AMP = 0.01 # specle amplitude
+    WIDTH = 0.1 # beam width
+    TIME_INCREMEMT = 1e-11 # simulation time step
+    E_FIELD = [0, 0, -10] # electric field to keep protons from turning around
 
     def __init__(self, n_protons = 100, temperature = 10):
         '''
@@ -81,7 +82,7 @@ class ProtonBeam():
         temperature *= 1e6
         for _ in range(n_protons):
             v = maxwell(temp = temperature)
-            spread = np.random.rand()*np.pi/50
+            spread = np.random.rand()*np.pi/20
             traj = np.random.rand()*2*np.pi
             vel = [v*np.sin(spread)*np.cos(traj), v*np.sin(spread)*np.sin(traj), -v*np.cos(spread)]
             self.__protons.append(Proton(pos = [0, 0, 1], vel = vel))
@@ -116,7 +117,7 @@ class ProtonBeam():
         '''
         for proton in self.__protons:
             magnetic = biermann_field(proton.pos(), self.beam_sh, self.density_distr)
-            proton.move(ProtonBeam.TIME_INCREMEMT, magnetic)
+            proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
     def density_distr(self, xyz):
         '''
         Density distribution
@@ -151,11 +152,15 @@ class ProtonBeam():
             final positions of protons
         '''
         positions = []
+        detected = 0
         while True:
             self.propagate()
             for i, proton in enumerate(self.__protons):
                 if proton.pos()[2] <= 0:
-                    positions.append(proton.pos()[:2])
+                    detected += 1
+                    print(f"Proton {detected} detected.")
+                    if np.abs(proton.pos()[0]) < 3 and np.abs(proton.pos()[1]) < 3:
+                        positions.append(proton.pos()[:2])
                     self.__protons.pop(i)
                 elif proton.vel()[2] >= 0:
                     self.__protons.pop(i)
@@ -174,6 +179,6 @@ class ProtonBeam():
         return positions
 
 if __name__ == "__main__":
-    sample_beam = ProtonBeam(1000, 10)
+    sample_beam = ProtonBeam(100, 10)
     sample_beam.plot_spectrum()
     position_arr = sample_beam.send_beam()
