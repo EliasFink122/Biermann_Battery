@@ -4,12 +4,22 @@ Created on Tue Jul 16 2024
 @author: Elias Fink (elias.fink22@imperial.ac.uk)
 
 Integrate magnetic field to find proton beam path.
+
+Methods:
+    maxwell:
+        random speed values according to M-B distribution
+
+Classes:
+    Proton:
+        base class for proton properties and movement
+    ProtonBeam:
+        collection of protons that can be fired at a target through a specified magnetic field
 """
+from multiprocessing import Pool
 import numpy as np
 from BB_Simple import beam, density, biermann_field
 from scipy.constants import elementary_charge as e, proton_mass as m_p
 import matplotlib.pyplot as plt
-from multiprocessing import Pool
 
 def maxwell(temp = 1e7) -> np.ndarray:
     '''
@@ -29,6 +39,14 @@ def maxwell(temp = 1e7) -> np.ndarray:
 class Proton():
     '''
     Proton base class
+
+    Methods:
+        pos:
+            get hidden position attribute
+        vel:
+            get hidden velocity attribute
+        move:
+            update position according to velocity and velocity according to force
     '''
     def __init__(self, pos = [0., 0., 1.], vel = [0., 0., -1.]):
         '''
@@ -64,6 +82,26 @@ class Proton():
 class ProtonBeam():
     '''
     Proton beam
+
+    Methods:
+        protons:
+            get hidden protons array attribute
+        plot_spectrum:
+            plots proton speed spectrum and beam distribution at target
+        density_distr:
+            density distribution function
+        beam_sh:
+            beam shape function
+        propagate (SCP):
+            propagate whole proton beam by one time step
+        send_beam (SCP):
+            shoot all protons at the same time and increment all at once each time step
+        propagate_one (MCP):
+            propagate only one proton by one time step
+        shoot_at_target (MCP):
+            propagate one proton repeatedly until it hits the target and record position
+        send_beam_mp (MCP):
+            shoot protons one at a time and plot final positions
     '''
     RHO0 = 0.2 # base density
     DECAY_LENGTH = 0.2 # density decay length scale
