@@ -111,13 +111,13 @@ def biermann_field(beam_sh, density_distr, width) -> np.array:
 
 if __name__ == "__main__":
     # Parameters
-    RHO0 = 10
-    DECAY_LENGTH = 0.1
-    AMP = 10
+    RHO0 = 0.2
+    DECAY_LENGTH = 0.2
+    AMP = 0.1
     MOD_AMP = 0.5
-    MOD_FREQ = 1
-    WIDTH = 10
-    NUM = 20
+    MOD_FREQ = 10
+    WIDTH = 0.1
+    NUM = 50
 
     densities = density(RHO0, DECAY_LENGTH, NUM)
     mod_beam = beam(AMP, WIDTH, MOD_AMP, MOD_FREQ, NUM)
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     x, y, z = np.meshgrid(x_arr, x_arr, x_arr)
-    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=1,
+    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=0.00001,
               linewidth = 2, arrow_length_ratio = 0.3)
     x, y = np.meshgrid(x_arr, x_arr)
     ax.plot_surface(x, y, mod_beam, cmap = "Oranges")

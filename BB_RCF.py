@@ -107,7 +107,7 @@ class ProtonBeam():
         send_beam_mp (MCP):
             shoot protons one at a time and plot final positions
     '''
-    RHO0 = 0.2 # base density
+    RHO0 = 1 # base density
     DECAY_LENGTH = 0.2 # density decay length scale
     AMP = 0.1 # beam amplitude
     WIDTH = 0.1 # beam width
@@ -118,7 +118,7 @@ class ProtonBeam():
     SPEC_AMP = 0.05 # speckle amplitude
 
     # Realistic mode
-    MOD_AMP = 0.005 # modulation amplitude
+    MOD_AMP = 2 # modulation amplitude
     MOD_FREQ = 10 # modulation frequency
     NUM = 50 # physics resolution
 
@@ -320,7 +320,7 @@ class ProtonBeam():
         if plot:
             plt.figure()
             plt.title("Simulated RCF")
-            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 100)
+            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 200)
             plt.xlabel("x [mm]")
             plt.ylabel("y [mm]")
             plt.colorbar(label = "Frequency")
@@ -329,6 +329,6 @@ class ProtonBeam():
         return positions
 
 if __name__ == "__main__":
-    sample_beam = ProtonBeam(1e2, 10, 'even')
-    sample_beam.plot_spectrum(100)
+    sample_beam = ProtonBeam(5e4, 10, 'even')
+    sample_beam.plot_spectrum(200)
     position_arr = sample_beam.send_beam_mp()
