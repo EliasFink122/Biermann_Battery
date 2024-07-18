@@ -6,7 +6,7 @@ Created on Mon Jul 15 2024
 Realistic simulation of a Biermann battery.
 
 Methods:
-    modulation_beam:
+    beam:
         defines beam shape
     density:
         defines density profile of plasma
@@ -19,7 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 
-def modulation_beam(amp, width, mod_amp, mod_freq, num) -> np.ndarray:
+def beam(amp, width, mod_amp, mod_freq, num) -> np.ndarray:
     '''
     Adds modulation to the beam shape.
     Change this for more control about the initial beam shape.
@@ -33,14 +33,14 @@ def modulation_beam(amp, width, mod_amp, mod_freq, num) -> np.ndarray:
         value of modulation
     '''
     xs = np.linspace(-width*1.5, width*1.5, num)
-    beam_arr = np.zeros((len(xs), len(xs)))
-    phase = np.random.rand(np.shape(beam_arr))*2*np.pi
+    xys = np.zeros((len(xs), len(xs), 2))
     for i, x in enumerate(xs):
         for j, y in enumerate(xs):
-            modulation = np.exp(mod_amp * np.sin(mod_freq*np.linalg.norm([x, y]))**2 * np.exp(1j*phase))
-            ideal_beam = amp*np.exp(-((np.linalg.norm([x, y])**2)/(2*width**2))**5)
-            beam_arr[i, j] = ideal_beam * modulation
-    return beam_arr
+            xys[i, j] = [x, y]
+    phase = np.random.rand(num, num)*2*np.pi
+    modulation = np.exp(mod_amp * np.sin(mod_freq*np.linalg.norm(xys, axis = 2))**2 * np.exp(1j*phase))
+    ideal_beam = amp*np.exp(-((np.linalg.norm(xys, axis = 2)**2)/(2*width**2))**5)
+    return np.abs(ideal_beam * modulation)
 
 def density(rho0, decay_length, num) -> np.ndarray:
     '''
@@ -56,8 +56,8 @@ def density(rho0, decay_length, num) -> np.ndarray:
     '''
     zs = np.linspace(0, 5*decay_length, num)
     density_arr = np.zeros((len(zs)))
-    for i, z in enumerate(zs):
-        density_arr[i] = rho0 * np.exp(-z/decay_length)
+    for i, z_pos in enumerate(zs):
+        density_arr[i] = rho0 * np.exp(-z_pos/decay_length)
     return density_arr
 
 def grad(arr, width) -> np.array:
@@ -66,24 +66,28 @@ def grad(arr, width) -> np.array:
 
     Args:
         arr: array of beam or density
+        width: beam width
 
     Returns:
         gradient of array
     '''
     spacing = 3*width/len(arr)
-    gradient_12d = np.gradient(arr, spacing)
 
-    gradient = np.zeros((len(gradient_12d), len(gradient_12d), len(gradient_12d), 3))
-    if len(np.shape(grad)) == 1:
-        for i, _ in enumerate(gradient):
-            for j, _ in enumerate(gradient):
-                for k, _ in enumerate(gradient):
-                    gradient[i, j, k] = np.array([0, 0, gradient_12d])
-    elif len(np.shape(grad)) == 3:
-        for i, _ in enumerate(gradient):
-            for j, _ in enumerate(gradient):
-                for k, _ in enumerate(gradient):
-                    gradient[i, j, k] = np.array([gradient_12d[0], gradient_12d[1], 0])
+    gradient_12d = np.array(np.gradient(arr, spacing))
+
+    if len(np.shape(arr)) == 1:
+        gradient = np.zeros((len(gradient_12d), len(gradient_12d), len(gradient_12d), 3))
+        for i, row1 in enumerate(gradient):
+            for j, row2 in enumerate(row1):
+                for k, _ in enumerate(row2):
+                    gradient[i, j, k] = np.array([0, 0, gradient_12d[k]])
+    elif len(np.shape(arr)) == 2:
+        gradient = np.zeros((len(gradient_12d[0]), len(gradient_12d[0]), len(gradient_12d[0]), 3))
+        for i, row1 in enumerate(gradient):
+            for j, row2 in enumerate(row1):
+                for k, _ in enumerate(row2):
+                    gradient[i, j, k] = np.array([gradient_12d[0, i, j], gradient_12d[1, i, j], 0])
+
     return gradient
 
 def biermann_field(beam_sh, density_distr, width) -> np.array:
@@ -94,6 +98,7 @@ def biermann_field(beam_sh, density_distr, width) -> np.array:
         xyz: 3-d position
         temp_func: function of temperature distribution
         density_func: function of density distribution
+        width: beam width
 
     Returns:
         magnetic field
@@ -109,24 +114,25 @@ if __name__ == "__main__":
     RHO0 = 10
     DECAY_LENGTH = 0.1
     AMP = 10
-    MOD_AMP = 1
-    MOD_FREQ = 0.1
-    WIDTH = 0.1
-    NUM = 100
+    MOD_AMP = 0.5
+    MOD_FREQ = 1
+    WIDTH = 10
+    NUM = 20
 
     densities = density(RHO0, DECAY_LENGTH, NUM)
-    beam = modulation_beam(AMP, WIDTH, MOD_AMP, MOD_FREQ, NUM)
-    bf = biermann_field(beam, densities, WIDTH)
+    mod_beam = beam(AMP, WIDTH, MOD_AMP, MOD_FREQ, NUM)
+
+    bf = biermann_field(mod_beam, densities, WIDTH)
 
     x_arr = np.linspace(-1.5*WIDTH, 1.5*WIDTH, NUM)
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     x, y, z = np.meshgrid(x_arr, x_arr, x_arr)
-    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=0.00001,
+    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=1,
               linewidth = 2, arrow_length_ratio = 0.3)
     x, y = np.meshgrid(x_arr, x_arr)
-    ax.plot_surface(x, y, beam, cmap = "Oranges")
+    ax.plot_surface(x, y, mod_beam, cmap = "Oranges")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
