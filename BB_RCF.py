@@ -17,9 +17,13 @@ Classes:
 """
 from multiprocessing import Pool
 import numpy as np
-from BB_Simple import beam, density, biermann_field
 from scipy.constants import elementary_charge as e, proton_mass as m_p
 import matplotlib.pyplot as plt
+MODE = "realistic"
+if MODE == "simple":
+    from BB_Simple import beam, density, biermann_field
+elif MODE == "realistic":
+    from BB_Realistic import beam, density, biermann_field
 
 def maxwell(temp = 1e7) -> np.ndarray:
     '''
@@ -106,10 +110,23 @@ class ProtonBeam():
     RHO0 = 0.2 # base density
     DECAY_LENGTH = 0.2 # density decay length scale
     AMP = 0.1 # beam amplitude
-    SPEC_AMP = 0.05 # specle amplitude
     WIDTH = 0.1 # beam width
     TIME_INCREMEMT = 1e-11 # simulation time step
     E_FIELD = [0, 0, -10] # electric field to keep protons from turning around
+
+    # Simple mode
+    SPEC_AMP = 0.05 # speckle amplitude
+
+    # Realistic mode
+    MOD_AMP = 0.005 # modulation amplitude
+    MOD_FREQ = 10 # modulation frequency
+    NUM = 50 # physics resolution
+
+    if MODE == "realistic":
+        density_distr_real = density(RHO0, DECAY_LENGTH, NUM)
+        beam_sh_real = beam(AMP, WIDTH, MOD_AMP, MOD_FREQ, NUM)
+        biermann = biermann_field(beam_sh_real, density_distr_real, WIDTH)
+
 
     def __init__(self, n_protons = 100, temperature = 10, distribution = 'even'):
         '''
@@ -190,8 +207,8 @@ class ProtonBeam():
         Returns:
             beam intensity value
         '''
-        return beam(xyz, amp = ProtonBeam.AMP, spec_amp = ProtonBeam.SPEC_AMP,
-                    width = ProtonBeam.WIDTH)
+        beam(xyz, amp = ProtonBeam.AMP, spec_amp = ProtonBeam.SPEC_AMP,
+                        width = ProtonBeam.WIDTH)
 
     # Single core processing
     def propagate(self):
@@ -199,7 +216,14 @@ class ProtonBeam():
         Propagate proton beam along
         '''
         for proton in self.__protons:
-            magnetic = biermann_field(proton.pos(), self.beam_sh, self.density_distr)
+            if MODE == "simple":
+                magnetic = biermann_field(proton.pos(), self.beam_sh, self.density_distr)
+            elif MODE == "realistic":
+                xs = np.linspace(-1.5*ProtonBeam.WIDTH, 1.5*ProtonBeam.WIDTH, ProtonBeam.NUM)
+                x_coord = np.argmin(xs - proton.pos()[0])
+                y_coord = np.argmin(xs - proton.pos()[1])
+                z_coord = np.argmin(xs - proton.pos()[2])
+                magnetic = ProtonBeam.biermann[x_coord, y_coord, z_coord]
             proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
     def send_beam(self, plot = True) -> np.ndarray:
         '''
@@ -247,7 +271,14 @@ class ProtonBeam():
         '''
         Propagate one proton by one time step
         '''
-        magnetic = biermann_field(proton.pos(), self.beam_sh, self.density_distr)
+        if MODE == "simple":
+            magnetic = biermann_field(proton.pos(), self.beam_sh, self.density_distr)
+        elif MODE == "realistic":
+            xs = np.linspace(-1.5*ProtonBeam.WIDTH, 1.5*ProtonBeam.WIDTH, ProtonBeam.NUM)
+            x_coord = np.argmin(xs - proton.pos()[0])
+            y_coord = np.argmin(xs - proton.pos()[1])
+            z_coord = np.argmin(xs - proton.pos()[2])
+            magnetic = ProtonBeam.biermann[x_coord, y_coord, z_coord]
         proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
         return proton
     def shoot_at_target(self, proton: Proton) -> list[float]:
@@ -289,7 +320,7 @@ class ProtonBeam():
         if plot:
             plt.figure()
             plt.title("Simulated RCF")
-            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 1000)
+            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 100)
             plt.xlabel("x [mm]")
             plt.ylabel("y [mm]")
             plt.colorbar(label = "Frequency")
@@ -298,6 +329,6 @@ class ProtonBeam():
         return positions
 
 if __name__ == "__main__":
-    sample_beam = ProtonBeam(1e6, 10, 'even')
-    sample_beam.plot_spectrum(1000)
+    sample_beam = ProtonBeam(1e2, 10, 'even')
+    sample_beam.plot_spectrum(100)
     position_arr = sample_beam.send_beam_mp()
