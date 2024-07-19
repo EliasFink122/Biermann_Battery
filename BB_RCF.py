@@ -18,7 +18,6 @@ Classes:
 from multiprocessing import Pool
 import numpy as np
 from scipy.constants import elementary_charge as e, proton_mass as m_p
-import matplotlib.pyplot as plt
 MODE = "realistic"
 if MODE == "simple":
     from BB_Simple import beam, density, biermann_field
@@ -158,34 +157,6 @@ class ProtonBeam():
             array of proton objects
         '''
         return self.__protons
-    def plot_spectrum(self, bins = 100):
-        '''
-        Plot proton speed spectrum.
-
-        Args:
-            bins: number of bins in histogram
-        '''
-        speeds = []
-        final_pos = []
-        for proton in self.__protons:
-            speeds.append(np.linalg.norm(proton.vel()))
-            final_pos.append([proton.vel()[0]/proton.vel()[2],
-                              proton.vel()[1]/proton.vel()[2]])
-
-        plt.figure()
-        plt.title("Proton speed spectrum")
-        plt.hist(speeds, bins = bins)
-        plt.xlabel("Speed [m/s]")
-        plt.ylabel("Frequency")
-
-        final_pos = np.array(final_pos)
-        plt.figure()
-        plt.title("Proton beam at target")
-        plt.hist2d(final_pos[:, 0]*1000, final_pos[:, 1]*1000, bins = bins)
-        plt.xlabel("x [mm]")
-        plt.ylabel("y [mm]")
-        plt.colorbar(label = "Frequency")
-        plt.show()
     def density_distr(self, xyz):
         '''
         Density distribution
@@ -317,18 +288,10 @@ class ProtonBeam():
             positions.pop(i)
 
         positions = np.array(positions)
-        if plot:
-            plt.figure()
-            plt.title("Simulated RCF")
-            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 5000)
-            plt.xlabel("x [mm]")
-            plt.ylabel("y [mm]")
-            plt.colorbar(label = "Frequency")
-            plt.savefig("RCF.png", dpi = 1000)
-            plt.show()
         return positions
 
 if __name__ == "__main__":
     sample_beam = ProtonBeam(1e8, 10, 'even')
     sample_beam.plot_spectrum(5000)
     position_arr = sample_beam.send_beam_mp()
+    np.savetxt("results.txt", position_arr)
