@@ -283,6 +283,5 @@ class ProtonBeam():
 
 if __name__ == "__main__":
     sample_beam = ProtonBeam(1e8, 10, 'even')
-    sample_beam.plot_spectrum(5000)
     position_arr = sample_beam.send_beam_mp()
     np.savetxt("results.txt", position_arr)
