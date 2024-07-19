@@ -135,20 +135,27 @@ class ProtonBeam():
             distribution: even, central or edge for different proton distributions
         '''
         self.__protons = []
-        temperature *= 1e6
-        for _ in range(int(n_protons)):
-            origin = [0, 0, 1]
-            speed = maxwell(temp = temperature)
-            if distribution == 'even':
-                spread = np.sqrt(np.random.rand())*np.pi/20
-            elif distribution == 'central':
-                spread = np.random.rand()*np.pi/20
-            elif distribution == 'edge':
-                spread = np.sqrt(np.sqrt(np.random.rand()))*np.pi/20
-            traj = np.random.rand()*2*np.pi
-            vel = [speed*np.sin(spread)*np.cos(traj), speed*np.sin(spread)*np.sin(traj),
-                   -speed*np.cos(spread)]
-            self.__protons.append(Proton(pos = origin, vel = vel))
+        self.__temperature = temperature*1e6
+        self.__distribution = distribution
+
+        with Pool() as pool:
+            pool.map(self.create_proton, range(int(n_protons)))
+    def create_proton(self):
+        '''
+        Create one proton only
+        '''
+        origin = [0, 0, 1]
+        speed = maxwell(temp = self.__temperature)
+        if self.__distribution == 'even':
+            spread = np.sqrt(np.random.rand())*np.pi/20
+        elif self.__distribution == 'central':
+            spread = np.random.rand()*np.pi/20
+        elif self.__distribution == 'edge':
+            spread = np.sqrt(np.sqrt(np.random.rand()))*np.pi/20
+        traj = np.random.rand()*2*np.pi
+        vel = [speed*np.sin(spread)*np.cos(traj), speed*np.sin(spread)*np.sin(traj),
+                -speed*np.cos(spread)]
+        self.__protons.append(Proton(pos = origin, vel = vel))
     def protons(self):
         '''
         Proton array
