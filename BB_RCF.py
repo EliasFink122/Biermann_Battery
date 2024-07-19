@@ -136,15 +136,17 @@ class ProtonBeam():
             temperature: proton temperature in MeV
             distribution: even, central or edge for different proton distributions
         '''
-        self.__protons = []
         self.__temperature = temperature*1e6
         self.__distribution = distribution
 
         with Pool() as pool:
-            pool.map(self.create_proton, range(int(n_protons)))
+            self.__protons = pool.map(self.create_proton, range(int(n_protons)))
     def create_proton(self):
         '''
         Create one proton only
+
+        Returns:
+            proton object
         '''
         origin = [0, 0, 1]
         speed = maxwell(temp = self.__temperature)
@@ -157,7 +159,7 @@ class ProtonBeam():
         traj = np.random.rand()*2*np.pi
         vel = [speed*np.sin(spread)*np.cos(traj), speed*np.sin(spread)*np.sin(traj),
                 -speed*np.cos(spread)]
-        self.__protons.append(Proton(pos = origin, vel = vel))
+        return Proton(pos = origin, vel = vel)
     def protons(self):
         '''
         Proton array
