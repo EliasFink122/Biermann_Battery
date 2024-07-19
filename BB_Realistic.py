@@ -17,7 +17,7 @@ Methods:
 """
 import numpy as np
 
-def beam(amp, width, mod_amp, mod_freq, num) -> np.ndarray:
+def beam(amp, width, mod_amp, mod_freq, num):
     '''
     Adds modulation to the beam shape.
     Change this for more control about the initial beam shape.
@@ -40,7 +40,7 @@ def beam(amp, width, mod_amp, mod_freq, num) -> np.ndarray:
     ideal_beam = amp*np.exp(-((np.linalg.norm(xys, axis = 2)**2)/(2*width**2))**5)
     return np.abs(ideal_beam * modulation)
 
-def density(rho0, decay_length, num) -> np.ndarray:
+def density(rho0, decay_length, num):
     '''
     Density decay function.
 
@@ -58,7 +58,7 @@ def density(rho0, decay_length, num) -> np.ndarray:
         density_arr[i] = rho0 * np.exp(-z_pos/decay_length)
     return density_arr
 
-def grad(arr, width) -> np.array:
+def grad(arr, width):
     '''
     Gradient of function.
 
@@ -88,7 +88,7 @@ def grad(arr, width) -> np.array:
 
     return gradient
 
-def biermann_field(beam_sh, density_distr, width) -> np.array:
+def biermann_field(beam_sh, density_distr, width):
     '''
     Determines magnetic field due to Biermann battery.
 

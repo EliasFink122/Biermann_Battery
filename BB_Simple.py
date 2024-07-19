@@ -17,7 +17,7 @@ Methods:
 """
 import numpy as np
 
-def beam(xyz, amp, spec_amp, width) -> float:
+def beam(xyz, amp, spec_amp, width):
     '''
     Beam intensity function based on super Gaussian.
 
@@ -44,7 +44,7 @@ def beam(xyz, amp, spec_amp, width) -> float:
 
     return base_beam + spec1 + spec2
 
-def density(xyz, rho0, decay_length) -> float:
+def density(xyz, rho0, decay_length):
     '''
     Density decay function.
 
@@ -61,7 +61,7 @@ def density(xyz, rho0, decay_length) -> float:
         return rho0
     return rho0 * np.exp(-z/decay_length)
 
-def grad(func, coord) -> np.array:
+def grad(func, coord):
     '''
     Gradient of function.
 
@@ -83,7 +83,7 @@ def grad(func, coord) -> np.array:
         gradient[l] = diff
     return gradient
 
-def biermann_field(xyz, beam_shape, density_func) -> np.array:
+def biermann_field(xyz, beam_shape, density_func):
     '''
     Determines magnetic field due to Biermann battery.
 

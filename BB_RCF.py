@@ -24,7 +24,7 @@ if MODE == "simple":
 elif MODE == "realistic":
     from BB_Realistic import beam, density, biermann_field
 
-def maxwell(temp = 1e7) -> np.ndarray:
+def maxwell(temp = 1e7):
     '''
     Randomly Maxwellian-distributed values
 
@@ -59,7 +59,7 @@ class Proton():
         '''
         self.__pos = np.array(pos)
         self.__vel = np.array(vel)
-    def pos(self) -> np.ndarray:
+    def pos(self):
         '''
         Proton position
 
@@ -67,7 +67,7 @@ class Proton():
             proton position array
         '''
         return self.__pos
-    def vel(self) -> np.ndarray:
+    def vel(self):
         '''
         Proton velocity
 
@@ -75,7 +75,7 @@ class Proton():
             proton velocity array
         '''
         return self.__vel
-    def move(self, dt, b_field, e_field = [0, 0, 0]) -> np.ndarray:
+    def move(self, dt, b_field, e_field = [0, 0, 0]):
         '''
         Moves proton and updated velocity
         '''
@@ -134,7 +134,7 @@ class ProtonBeam():
             temperature: proton temperature in MeV
             distribution: even, central or edge for different proton distributions
         '''
-        self.__protons: list[Proton] = []
+        self.__protons = []
         temperature *= 1e6
         for _ in range(int(n_protons)):
             origin = [0, 0, 1]
@@ -149,7 +149,7 @@ class ProtonBeam():
             vel = [speed*np.sin(spread)*np.cos(traj), speed*np.sin(spread)*np.sin(traj),
                    -speed*np.cos(spread)]
             self.__protons.append(Proton(pos = origin, vel = vel))
-    def protons(self) -> list:
+    def protons(self):
         '''
         Proton array
 
@@ -168,7 +168,7 @@ class ProtonBeam():
             density value
         '''
         return density(xyz, rho0 = ProtonBeam.RHO0, decay_length = ProtonBeam.DECAY_LENGTH)
-    def beam_sh(self, xyz) -> float:
+    def beam_sh(self, xyz):
         '''
         Beam shape
 
@@ -196,7 +196,7 @@ class ProtonBeam():
                 z_coord = np.argmin(xs - proton.pos()[2])
                 magnetic = ProtonBeam.biermann[x_coord, y_coord, z_coord]
             proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
-    def send_beam(self) -> np.ndarray:
+    def send_beam(self):
         '''
         Send beam through magnetic field and record on RCF behind target.
 
@@ -229,7 +229,7 @@ class ProtonBeam():
         return positions
 
     # Multi core processing
-    def propagate_one(self, proton: Proton) -> Proton:
+    def propagate_one(self, proton: Proton):
         '''
         Propagate one proton by one time step
         '''
@@ -243,7 +243,7 @@ class ProtonBeam():
             magnetic = ProtonBeam.biermann[x_coord, y_coord, z_coord]
         proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
         return proton
-    def shoot_at_target(self, proton: Proton) -> list[float]:
+    def shoot_at_target(self, proton: Proton):
         '''
         Shoot one proton at target
         '''
@@ -257,7 +257,7 @@ class ProtonBeam():
             if proton.vel()[2] >= 0:
                 print("Warning: Proton moving backwards")
                 return None
-    def send_beam_mp(self) -> np.ndarray:
+    def send_beam_mp(self):
         '''
         Send beam through magnetic field and record on RCF behind target using multiprocessing.
 
