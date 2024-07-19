@@ -196,7 +196,7 @@ class ProtonBeam():
                 z_coord = np.argmin(xs - proton.pos()[2])
                 magnetic = ProtonBeam.biermann[x_coord, y_coord, z_coord]
             proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
-    def send_beam(self, plot = True) -> np.ndarray:
+    def send_beam(self) -> np.ndarray:
         '''
         Send beam through magnetic field and record on RCF behind target.
 
@@ -226,15 +226,6 @@ class ProtonBeam():
             if len(self.__protons) == 0:
                 break
         positions = np.array(positions)
-        if plot:
-            plt.figure()
-            plt.title("Simulated RCF")
-            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 100)
-            plt.xlabel("x [mm]")
-            plt.ylabel("y [mm]")
-            plt.colorbar(label = "Frequency")
-            plt.savefig("RCF.png", dpi = 1000)
-            plt.show()
         return positions
 
     # Multi core processing
@@ -266,7 +257,7 @@ class ProtonBeam():
             if proton.vel()[2] >= 0:
                 print("Warning: Proton moving backwards")
                 return None
-    def send_beam_mp(self, plot = True) -> np.ndarray:
+    def send_beam_mp(self) -> np.ndarray:
         '''
         Send beam through magnetic field and record on RCF behind target using multiprocessing.
 
