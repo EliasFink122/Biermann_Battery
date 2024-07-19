@@ -320,7 +320,7 @@ class ProtonBeam():
         if plot:
             plt.figure()
             plt.title("Simulated RCF")
-            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 200)
+            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 5000)
             plt.xlabel("x [mm]")
             plt.ylabel("y [mm]")
             plt.colorbar(label = "Frequency")
@@ -329,6 +329,6 @@ class ProtonBeam():
         return positions
 
 if __name__ == "__main__":
-    sample_beam = ProtonBeam(5e4, 10, 'even')
-    sample_beam.plot_spectrum(200)
+    sample_beam = ProtonBeam(1e8, 10, 'even')
+    sample_beam.plot_spectrum(5000)
     position_arr = sample_beam.send_beam_mp()
