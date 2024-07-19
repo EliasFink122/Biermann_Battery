@@ -16,8 +16,6 @@ Methods:
         finds magnetic field given density and beam fields
 """
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import axes3d
 
 def beam(xyz, amp, spec_amp, width) -> float:
     '''
@@ -103,45 +101,3 @@ def biermann_field(xyz, beam_shape, density_func) -> np.array:
     magnetic_field = np.cross(grad_density, grad_temp)
 
     return magnetic_field
-
-if __name__ == "__main__":
-    # Parameters
-    RHO0 = 10
-    DECAY_LENGTH = 0.1
-    AMP = 10
-    SPEC_AMP = 1
-    WIDTH = 0.1
-
-    density_distr = lambda xyz: density(xyz, rho0 = RHO0, decay_length = DECAY_LENGTH)
-    beam_sh = lambda xyz: beam(xyz, amp = AMP, spec_amp = SPEC_AMP, width = WIDTH)
-
-    NUM = 20
-    NUMZ = 10
-    xs = np.linspace(-1.5*WIDTH, 1.5*WIDTH, NUM)
-    zs = np.linspace(0, 1.5*DECAY_LENGTH, NUMZ)
-
-    bf = np.zeros((NUM, NUM, NUMZ, 3))
-    for i, x in enumerate(xs):
-        for j, y in enumerate(xs):
-            for k, z in enumerate(zs):
-                bf[i, j, k] = biermann_field(xyz = [x, y, z], beam_shape = beam_sh,
-                                    density_func = density_distr)
-
-    NUMB = 50
-    beam_xs = np.linspace(-1.5*WIDTH, 1.5*WIDTH, NUMB)
-    beam_arr = np.zeros((len(beam_xs), len(beam_xs)))
-    for i, x in enumerate(beam_xs):
-        for j, y in enumerate(beam_xs):
-            beam_arr[i, j] = beam_sh([x, y, 0])
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    x, y, z = np.meshgrid(xs, xs, zs)
-    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=0.00001,
-              linewidth = 2, arrow_length_ratio = 0.3)
-    x, y = np.meshgrid(beam_xs, beam_xs)
-    ax.plot_surface(x, y, beam_arr, cmap = "Oranges")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
-    plt.show()
