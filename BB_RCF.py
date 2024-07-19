@@ -224,7 +224,6 @@ class ProtonBeam():
                 if proton.pos()[2] <= 0:
                     if np.abs(proton.pos()[0]) < 0.3 and np.abs(proton.pos()[1]) < 0.3:
                         detected += 1
-                        print(f"Proton {detected} detected.")
                         positions.append(proton.pos()[:2])
                     for_removal.append(i)
                 elif proton.vel()[2] >= 0:
@@ -260,7 +259,6 @@ class ProtonBeam():
             proton = self.propagate_one(proton)
             if proton.pos()[2] <= 0:
                 if np.abs(proton.pos()[0]) < 0.3 and np.abs(proton.pos()[1]) < 0.3:
-                    print(f"Proton detected at {proton.pos()[:2]}.")
                     return proton.pos()[:2]
                 return None
             if proton.vel()[2] >= 0:
@@ -291,6 +289,10 @@ class ProtonBeam():
         return positions
 
 if __name__ == "__main__":
-    sample_beam = ProtonBeam(1e8, 10, 'even')
+    print("Creating proton beam...")
+    sample_beam = ProtonBeam(1e7, 10, 'even')
+    print("Shooting proton beam...")
     position_arr = sample_beam.send_beam_mp()
+    print("Saving result...")
     np.savetxt("results.txt", position_arr)
+    print("Finished!")
