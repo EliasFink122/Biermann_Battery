@@ -87,6 +87,8 @@ class ProtonBeam():
     Proton beam
 
     Methods:
+        create_proton:
+            create proton with certain speed (thermal MB distribution)
         protons:
             get hidden protons array attribute
         plot_spectrum:
