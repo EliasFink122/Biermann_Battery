@@ -30,6 +30,8 @@ def read_in(path: str) -> tuple[np.ndarray, np.ndarray]:
     img = Image.open(path)
     imarray = np.array(img)
 
+    imarray = imarray[int(len(imarray)/3):int(4*len(imarray)/5),
+                      int(len(imarray[0])/5):int(4*len(imarray[0])/5)]
     for i, row in enumerate(imarray):
         for j, val in enumerate(row):
             if val < 150:
@@ -43,7 +45,7 @@ def read_in(path: str) -> tuple[np.ndarray, np.ndarray]:
             target_arr = imarray[:, i:]
             break
 
-    beam_arr = remove_white_space(beam_arr, thresh)
+    beam_arr = remove_white_space(beam_arr, thresh+200)
     target_arr = remove_white_space(target_arr, thresh)
     return beam_arr, target_arr
 
