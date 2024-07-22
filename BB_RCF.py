@@ -141,7 +141,7 @@ class ProtonBeam():
 
         with Pool() as pool:
             self.__protons = pool.map(self.create_proton, range(int(n_protons)))
-    def create_proton(self):
+    def create_proton(self, i):
         '''
         Create one proton only
 
