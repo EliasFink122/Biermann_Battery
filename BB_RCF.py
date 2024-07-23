@@ -19,7 +19,7 @@ from multiprocessing import Pool
 import numpy as np
 from scipy.constants import elementary_charge as e, proton_mass as m_p
 import matplotlib.pyplot as plt
-MODE = "realistic"
+MODE = "simple"
 if MODE == "simple":
     from BB_Simple import beam, density, biermann_field
 elif MODE == "realistic":
@@ -108,11 +108,11 @@ class ProtonBeam():
             shoot protons one at a time and plot final positions
     '''
     RHO0 = 1 # base density
-    DECAY_LENGTH = 0.2 # density decay length scale
+    DECAY_LENGTH = 0.5 # density decay length scale
     AMP = 0.1 # beam amplitude
     WIDTH = 0.1 # beam width
     TIME_INCREMEMT = 1e-11 # simulation time step
-    E_FIELD = [0, 0, -10] # electric field to keep protons from turning around
+    E_FIELD = [0, 0, 0] # electric field to keep protons from turning around
 
     # Simple mode
     SPEC_AMP = 0.05 # speckle amplitude
@@ -138,10 +138,10 @@ class ProtonBeam():
         self.__protons: list[Proton] = []
         temperature *= 1e6
         for _ in range(int(n_protons)):
-            origin = [0, 0, 1]
+            origin = [0.1, 0, 1]
             speed = maxwell(temp = temperature)
             if distribution == 'even':
-                spread = np.sqrt(np.random.rand())*np.pi/20
+                spread = np.sqrt(np.random.rand())*np.pi/100
             elif distribution == 'central':
                 spread = np.random.rand()*np.pi/20
             elif distribution == 'edge':
@@ -169,8 +169,8 @@ class ProtonBeam():
         final_pos = []
         for proton in self.__protons:
             speeds.append(np.linalg.norm(proton.vel()))
-            final_pos.append([proton.vel()[0]/proton.vel()[2],
-                              proton.vel()[1]/proton.vel()[2]])
+            final_pos.append([proton.vel()[0]/proton.vel()[2] + proton.pos()[0],
+                              proton.vel()[1]/proton.vel()[2] + proton.pos()[1]])
 
         plt.figure()
         plt.title("Proton speed spectrum")
@@ -207,7 +207,7 @@ class ProtonBeam():
         Returns:
             beam intensity value
         '''
-        beam(xyz, amp = ProtonBeam.AMP, spec_amp = ProtonBeam.SPEC_AMP,
+        return beam(xyz, amp = ProtonBeam.AMP, spec_amp = ProtonBeam.SPEC_AMP,
                         width = ProtonBeam.WIDTH)
 
     # Single core processing
@@ -288,8 +288,8 @@ class ProtonBeam():
         while True:
             proton = self.propagate_one(proton)
             if proton.pos()[2] <= 0:
-                if np.abs(proton.pos()[0]) < 0.3 and np.abs(proton.pos()[1]) < 0.3:
-                    print(f"Proton detected at {proton.pos()[:2]}.")
+                if np.abs(proton.pos()[0]) < 0.5 and np.abs(proton.pos()[1]) < 0.5:
+                    #print(f"Proton detected at {proton.pos()[:2]}.")
                     return proton.pos()[:2]
                 return None
             if proton.vel()[2] >= 0:
@@ -320,7 +320,7 @@ class ProtonBeam():
         if plot:
             plt.figure()
             plt.title("Simulated RCF")
-            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 5000)
+            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 500)
             plt.xlabel("x [mm]")
             plt.ylabel("y [mm]")
             plt.colorbar(label = "Frequency")
@@ -329,6 +329,8 @@ class ProtonBeam():
         return positions
 
 if __name__ == "__main__":
-    sample_beam = ProtonBeam(1e8, 10, 'even')
-    sample_beam.plot_spectrum(5000)
+    print("Creating proton beam...")
+    sample_beam = ProtonBeam(1e5, 10, 'central')
+    sample_beam.plot_spectrum(500)
+    print("Shooting proton beam...")
     position_arr = sample_beam.send_beam_mp()

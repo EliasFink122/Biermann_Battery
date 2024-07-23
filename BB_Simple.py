@@ -91,15 +91,14 @@ def biermann_field(xyz, beam_shape, density_func) -> np.array:
 
     Args:
         xyz: 3-d position
-        temp_func: function of temperature distribution
+        beam_shape: function of beam intensity distribution
         density_func: function of density distribution
 
     Returns:
         magnetic field
     '''
-    temperature = beam_shape
     grad_density = np.array(grad(density_func, xyz))
-    grad_temp = np.array(grad(temperature, xyz))
+    grad_temp = np.array(grad(beam_shape, xyz))
     magnetic_field = np.cross(grad_density, grad_temp)
 
     return magnetic_field
