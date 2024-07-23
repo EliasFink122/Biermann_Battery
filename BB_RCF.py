@@ -143,7 +143,7 @@ class ProtonBeam():
             if distribution == 'even':
                 spread = np.sqrt(np.random.rand())*np.pi/100
             elif distribution == 'central':
-                spread = np.random.rand()*np.pi/20
+                spread = np.random.rand()*np.pi/10
             elif distribution == 'edge':
                 spread = np.sqrt(np.sqrt(np.random.rand()))*np.pi/20
             traj = np.random.rand()*2*np.pi
@@ -330,7 +330,7 @@ class ProtonBeam():
 
 if __name__ == "__main__":
     print("Creating proton beam...")
-    sample_beam = ProtonBeam(1e5, 10, 'even')
+    sample_beam = ProtonBeam(1e5, 10, 'central')
     sample_beam.plot_spectrum(500)
     print("Shooting proton beam...")
     position_arr = sample_beam.send_beam_mp()
