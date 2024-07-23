@@ -107,7 +107,7 @@ class ProtonBeam():
         send_beam_mp (MCP):
             shoot protons one at a time and plot final positions
     '''
-    RHO0 = 1 # base density
+    RHO0 = 2 # base density
     DECAY_LENGTH = 0.5 # density decay length scale
     AMP = 0.1 # beam amplitude
     WIDTH = 0.1 # beam width
@@ -138,7 +138,7 @@ class ProtonBeam():
         self.__protons: list[Proton] = []
         temperature *= 1e6
         for _ in range(int(n_protons)):
-            origin = [0.1, 0, 1]
+            origin = [0, 0.1, 1]
             speed = maxwell(temp = temperature)
             if distribution == 'even':
                 spread = np.sqrt(np.random.rand())*np.pi/100
@@ -288,12 +288,13 @@ class ProtonBeam():
         while True:
             proton = self.propagate_one(proton)
             if proton.pos()[2] <= 0:
-                if np.abs(proton.pos()[0]) < 0.7 and np.abs(proton.pos()[1]) < 0.5:
-                    #print(f"Proton detected at {proton.pos()[:2]}.")
-                    return proton.pos()[:2]
-                return None
-            if proton.vel()[2] >= 0:
-                print("Warning: Proton moving backwards")
+                #print(f"Proton detected at {proton.pos()[:2]}.")
+                return proton.pos()[:2]
+
+            moving_backwards = proton.vel()[2] >= 0
+            out_of_screen = not (np.abs(proton.pos()[0]) < 0.75 and np.abs(proton.pos()[1]) < 1.5)
+            if moving_backwards or out_of_screen:
+                print("Warning: Proton out of scope")
                 return None
     def send_beam_mp(self, plot = True) -> np.ndarray:
         '''
@@ -330,7 +331,7 @@ class ProtonBeam():
 
 if __name__ == "__main__":
     print("Creating proton beam...")
-    sample_beam = ProtonBeam(1e5, 10, 'central')
+    sample_beam = ProtonBeam(2e5, 10, 'central')
     sample_beam.plot_spectrum(500)
     print("Shooting proton beam...")
     position_arr = sample_beam.send_beam_mp()
