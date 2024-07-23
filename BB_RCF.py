@@ -288,7 +288,7 @@ class ProtonBeam():
         while True:
             proton = self.propagate_one(proton)
             if proton.pos()[2] <= 0:
-                if np.abs(proton.pos()[0]) < 0.5 and np.abs(proton.pos()[1]) < 0.5:
+                if np.abs(proton.pos()[0]) < 0.7 and np.abs(proton.pos()[1]) < 0.5:
                     #print(f"Proton detected at {proton.pos()[:2]}.")
                     return proton.pos()[:2]
                 return None
@@ -330,7 +330,7 @@ class ProtonBeam():
 
 if __name__ == "__main__":
     print("Creating proton beam...")
-    sample_beam = ProtonBeam(1e5, 10, 'central')
+    sample_beam = ProtonBeam(1e5, 10, 'even')
     sample_beam.plot_spectrum(500)
     print("Shooting proton beam...")
     position_arr = sample_beam.send_beam_mp()
