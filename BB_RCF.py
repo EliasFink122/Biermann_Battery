@@ -44,13 +44,23 @@ def maxwell(temp = 1e7) -> np.ndarray:
 
 class F():
     '''
-    Electromagnetic field tensor.    
+    Electromagnetic field tensor
+
+    Methods:
+        matrix:
+            get EM field tensor as matrix
+        transform:
+            Lorentz boost tensor into different frame
+        get_e:
+            extract electric field
+        get_b:
+            extract magnetic field
     '''
     def __init__(self, e_field: list, b_field: list):
         '''
         Args:
-        e_field: electric field
-        b_field: magnetic field
+            e_field: electric field
+            b_field: magnetic field
         '''
         self.__f = np.array([
                     [0, -e_field[0]/c, -e_field[1]/c, -e_field[2]/c],
@@ -150,8 +160,9 @@ class Proton():
             f = F(e_field, b_field)
             f.transform(self.__vel)
             e_field = f.get_e()
-            b_field = f.get_b()
-        self.__vel = self.__vel + dt*e/m_p*(np.array(e_field) + np.cross(self.__vel, b_field))
+            self.__vel = self.__vel + dt*e/m_p*np.array(e_field)
+        else:
+            self.__vel = self.__vel + dt*e/m_p*(np.array(e_field) + np.cross(self.__vel, b_field))
 
 class ProtonBeam():
     '''
@@ -196,7 +207,6 @@ class ProtonBeam():
         density_distr_real = density(RHO0, DECAY_LENGTH, NUM)
         beam_sh_real = beam(AMP, WIDTH, MOD_AMP, MOD_FREQ, NUM)
         biermann = biermann_field(beam_sh_real, density_distr_real, WIDTH)
-
 
     def __init__(self, n_protons = 100, temperature = 10, distribution = 'even'):
         '''
@@ -281,9 +291,12 @@ class ProtonBeam():
                         width = ProtonBeam.WIDTH)
 
     # Single core processing
-    def propagate(self):
+    def propagate(self, rc = False):
         '''
         Propagate proton beam along
+
+        Args:
+            rc: whether to engage relativistic correction
         '''
         for proton in self.__protons:
             if MODE == "simple":
@@ -294,13 +307,14 @@ class ProtonBeam():
                 y_coord = np.argmin(xs - proton.pos()[1])
                 z_coord = np.argmin(xs - proton.pos()[2])
                 magnetic = ProtonBeam.biermann[x_coord, y_coord, z_coord]
-            proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
-    def send_beam(self, plot = True) -> np.ndarray:
+            proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD, rc = rc)
+    def send_beam(self, plot = True, rc = False) -> np.ndarray:
         '''
         Send beam through magnetic field and record on RCF behind target.
 
         Args:
             plot: whether to plot
+            rc: whether to engage relativistic correction
 
         Returns:
             final positions of protons
@@ -308,7 +322,7 @@ class ProtonBeam():
         positions = []
         detected = 0
         while True:
-            self.propagate()
+            self.propagate(rc = rc)
             for i, proton in enumerate(self.__protons):
                 for_removal = []
                 if proton.pos()[2] <= 0:
@@ -337,9 +351,16 @@ class ProtonBeam():
         return positions
 
     # Multi core processing
-    def propagate_one(self, proton: Proton) -> Proton:
+    def propagate_one(self, proton: Proton, rc = False) -> Proton:
         '''
         Propagate one proton by one time step
+
+        Args:
+            proton: proton object to propagate
+            rc: whether to engage relativistic correction
+
+        Returns:
+            updated proton object
         '''
         if MODE == "simple":
             magnetic = biermann_field(proton.pos(), self.beam_sh, self.density_distr)
@@ -349,14 +370,21 @@ class ProtonBeam():
             y_coord = np.argmin(xs - proton.pos()[1])
             z_coord = np.argmin(xs - proton.pos()[2])
             magnetic = ProtonBeam.biermann[x_coord, y_coord, z_coord]
-        proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
+        proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD, rc = rc)
         return proton
-    def shoot_at_target(self, proton: Proton) -> list[float]:
+    def shoot_at_target(self, proton: Proton, rc = False) -> list[float]:
         '''
         Shoot one proton at target
+
+        Args:
+            proton: proton object to shoot
+            rc: whether to engage relativistic correction
+
+        Returns:
+            final position of proton
         '''
         while True:
-            proton = self.propagate_one(proton)
+            proton = self.propagate_one(proton, rc = rc)
             if proton.pos()[2] <= 0:
                 #print(f"Proton detected at {proton.pos()[:2]}.")
                 return proton.pos()[:2]
