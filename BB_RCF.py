@@ -10,6 +10,8 @@ Methods:
         random speed values according to M-B distribution
 
 Classes:
+    F:
+        electromagnetic field tensor
     Proton:
         base class for proton properties and movement
     ProtonBeam:
@@ -17,7 +19,7 @@ Classes:
 """
 from multiprocessing import Pool
 import numpy as np
-from scipy.constants import elementary_charge as e, proton_mass as m_p
+from scipy.constants import elementary_charge as e, proton_mass as m_p, speed_of_light as c
 import matplotlib.pyplot as plt
 MODE = "simple"
 if MODE == "simple":
@@ -39,6 +41,63 @@ def maxwell(temp = 1e7) -> np.ndarray:
     vy = np.random.normal()
     vz = np.random.normal()
     return np.sqrt((vx*vx + vy*vy + vz*vz)*(temp*e/m_p))
+
+class F():
+    '''
+    Electromagnetic field tensor.    
+    '''
+    def __init__(self, e_field: list, b_field: list):
+        '''
+        Args:
+        e_field: electric field
+        b_field: magnetic field
+        '''
+        self.__f = np.array([
+                    [0, -e_field[0]/c, -e_field[1]/c, -e_field[2]/c],
+                    [e_field[0]/c, 0, -b_field[2], b_field[1]],
+                    [e_field[1]/c, b_field[2], 0, -b_field[0]],
+                    [e_field[2]/c, -b_field[1], b_field[0], 0]
+                    ])
+    def matrix(self) -> np.ndarray:
+        '''
+        Get electromagnetic field tensor matrix
+
+        Returns:
+        electromagnetic field tensor
+        '''
+        return self.__f
+    def transform(self, vel: np.ndarray):
+        '''
+        Transform EM field tensor into different frame.
+
+        Args:
+            boost: Lorentz boost
+        '''
+        gm = 1/np.sqrt(1 - np.dot(vel, vel)/c**2)
+        v_x, v_y, v_z, v = (vel[0], vel[1], vel[2], np.linalg.norm(vel))
+        lorentz = np.array([
+            [gm, -gm/c*v_x, -gm/c*v_y, -gm/c*v_z],
+            [-gm/c*v_x, 1+(gm-1)*v_x**2/v**2, (gm-1)*v_x*v_y/v**2, (gm-1)*v_x*v_z/v**2],
+            [-gm/c*v_y, (gm-1)*v_x*v_y/v**2, 1+(gm-1)*v_y**2/v**2, (gm-1)*v_y*v_z/v**2],
+            [-gm/c*v_z, (gm-1)*v_x*v_z/v**2, (gm-1)*v_y*v_z/v**2, 1+(gm-1)*v_z**2/v**2]
+            ])
+        self.__f = lorentz * self.__f * lorentz
+    def get_e(self) -> np.ndarray:
+        '''
+        Get electric field.
+
+        Returns:
+            electric field
+        '''
+        return -np.array([self.__f[0, 1], self.__f[0, 2], self.__f[0, 3]])*c
+    def get_b(self) -> np.ndarray:
+        '''
+        Get magnetic field.
+
+        Returns:
+            magnetic field
+        '''
+        return np.array([self.__f[3, 2], self.__f[1, 3], self.__f[2, 1]])
 
 class Proton():
     '''
@@ -76,11 +135,22 @@ class Proton():
             proton velocity array
         '''
         return self.__vel
-    def move(self, dt, b_field, e_field = [0, 0, 0]) -> np.ndarray:
+    def move(self, dt, b_field, e_field = [0, 0, 0], rc = False) -> np.ndarray:
         '''
         Moves proton and updated velocity
+
+        Args:
+            dt: time increment
+            b_field: magnetic field
+            e_field: electric field
+            rc: whether to engage relativistic correction
         '''
         self.__pos = self.__pos + dt*self.__vel
+        if rc:
+            f = F(e_field, b_field)
+            f.transform(self.__vel)
+            e_field = f.get_e()
+            b_field = f.get_b()
         self.__vel = self.__vel + dt*e/m_p*(np.array(e_field) + np.cross(self.__vel, b_field))
 
 class ProtonBeam():
