@@ -121,7 +121,7 @@ if __name__ == "__main__":
     MOD_AMP = 0.5
     MOD_FREQ = 10
     WIDTH = 0.1
-    NUM = 50
+    NUM = 20
 
     densities = density(RHO0, DECAY_LENGTH, NUM)
     mod_beam = beam(AMP, WIDTH, MOD_AMP, MOD_FREQ, NUM)
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     x, y, z = np.meshgrid(x_arr, x_arr, x_arr)
-    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=0.00001,
+    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=0.001,
               linewidth = 2, arrow_length_ratio = 0.3)
     x, y = np.meshgrid(x_arr, x_arr)
     ax.plot_surface(x, y, mod_beam[:, :, 0], cmap = "Oranges")
