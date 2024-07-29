@@ -20,14 +20,13 @@ Classes:
 from multiprocessing import Pool
 import numpy as np
 from scipy.constants import elementary_charge as e, proton_mass as m_p, speed_of_light as c
-import matplotlib.pyplot as plt
-MODE = "simple"
+MODE = "realistic"
 if MODE == "simple":
     from BB_Simple import beam, density, biermann_field
 elif MODE == "realistic":
     from BB_Realistic import beam, density, biermann_field
 
-def maxwell(temp = 1e7) -> np.ndarray:
+def maxwell(temp = 1e7):
     '''
     Randomly Maxwellian-distributed values
 
@@ -129,7 +128,7 @@ class Proton():
         '''
         self.__pos = np.array(pos)
         self.__vel = np.array(vel)
-    def pos(self) -> np.ndarray:
+    def pos(self):
         '''
         Proton position
 
@@ -137,7 +136,7 @@ class Proton():
             proton position array
         '''
         return self.__pos
-    def vel(self) -> np.ndarray:
+    def vel(self):
         '''
         Proton velocity
 
@@ -169,6 +168,8 @@ class ProtonBeam():
     Proton beam
 
     Methods:
+        create_proton:
+            create proton with certain speed (thermal MB distribution)
         protons:
             get hidden protons array attribute
         plot_spectrum:
@@ -215,22 +216,31 @@ class ProtonBeam():
             temperature: proton temperature in MeV
             distribution: even, central or edge for different proton distributions
         '''
-        self.__protons: list[Proton] = []
-        temperature *= 1e6
-        for _ in range(int(n_protons)):
-            origin = [0, 0, 1]
-            speed = maxwell(temp = temperature)
-            if distribution == 'even':
-                spread = np.sqrt(np.random.rand())*np.arctan(ProtonBeam.WIDTH*6/origin[2])
-            elif distribution == 'central':
-                spread = np.random.rand()*np.arctan(ProtonBeam.WIDTH*1.2/origin[2])
-            elif distribution == 'edge':
-                spread = np.sqrt(np.sqrt(np.random.rand()))*np.pi/20
-            traj = np.random.rand()*2*np.pi
-            vel = [speed*np.sin(spread)*np.cos(traj), speed*np.sin(spread)*np.sin(traj),
-                   -speed*np.cos(spread)]
-            self.__protons.append(Proton(pos = origin, vel = vel))
-    def protons(self) -> list:
+        self.__temperature = temperature*1e6
+        self.__distribution = distribution
+
+        with Pool() as pool:
+            self.__protons = pool.map(self.create_proton, range(int(n_protons)))
+    def create_proton(self, i):
+        '''
+        Create one proton only
+
+        Returns:
+            proton object
+        '''
+        origin = [0, 0, 1]
+        speed = maxwell(temp = self.__temperature)
+        if self.__distribution == 'even':
+            spread = np.sqrt(np.random.rand())*np.pi/20
+        elif self.__distribution == 'central':
+            spread = np.random.rand()*np.pi/20
+        elif self.__distribution == 'edge':
+            spread = np.sqrt(np.sqrt(np.random.rand()))*np.pi/20
+        traj = np.random.rand()*2*np.pi
+        vel = [speed*np.sin(spread)*np.cos(traj), speed*np.sin(spread)*np.sin(traj),
+                -speed*np.cos(spread)]
+        return Proton(pos = origin, vel = vel)
+    def protons(self):
         '''
         Proton array
 
@@ -238,34 +248,6 @@ class ProtonBeam():
             array of proton objects
         '''
         return self.__protons
-    def plot_spectrum(self, bins = 100):
-        '''
-        Plot proton speed spectrum.
-
-        Args:
-            bins: number of bins in histogram
-        '''
-        speeds = []
-        final_pos = []
-        for proton in self.__protons:
-            speeds.append(np.linalg.norm(proton.vel()))
-            final_pos.append([proton.vel()[0]/proton.vel()[2] + proton.pos()[0],
-                              proton.vel()[1]/proton.vel()[2] + proton.pos()[1]])
-
-        plt.figure()
-        plt.title("Proton speed spectrum")
-        plt.hist(speeds, bins = bins)
-        plt.xlabel("Speed [m/s]")
-        plt.ylabel("Frequency")
-
-        final_pos = np.array(final_pos)
-        plt.figure()
-        plt.title("Proton beam at target")
-        plt.hist2d(final_pos[:, 0]*1000, final_pos[:, 1]*1000, bins = bins)
-        plt.xlabel("x [mm]")
-        plt.ylabel("y [mm]")
-        plt.colorbar(label = "Frequency")
-        plt.show()
     def density_distr(self, xyz):
         '''
         Density distribution
@@ -331,7 +313,6 @@ class ProtonBeam():
                 if proton.pos()[2] <= 0:
                     if np.abs(proton.pos()[0]) < 0.3 and np.abs(proton.pos()[1]) < 0.3:
                         detected += 1
-                        print(f"Proton {detected} detected.")
                         positions.append(proton.pos()[:2])
                     for_removal.append(i)
                 elif proton.vel()[2] >= 0:
@@ -342,15 +323,6 @@ class ProtonBeam():
             if len(self.__protons) == 0:
                 break
         positions = np.array(positions)
-        if plot:
-            plt.figure()
-            plt.title("Simulated RCF")
-            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 100)
-            plt.xlabel("x [mm]")
-            plt.ylabel("y [mm]")
-            plt.colorbar(label = "Frequency")
-            plt.savefig("RCF.png", dpi = 1000)
-            plt.show()
         return positions
 
     # Multi core processing
@@ -400,7 +372,7 @@ class ProtonBeam():
             if moving_backwards or out_of_screen:
                 print("Warning: Proton out of scope")
                 return None
-    def send_beam_mp(self, plot = True) -> np.ndarray:
+    def send_beam_mp(self):
         '''
         Send beam through magnetic field and record on RCF behind target using multiprocessing.
 
@@ -422,20 +394,13 @@ class ProtonBeam():
             positions.pop(i)
 
         positions = np.array(positions)
-        if plot:
-            plt.figure()
-            plt.title("Simulated RCF")
-            plt.hist2d(positions[:, 0]*1000, positions[:, 1]*1000, bins = 500)
-            plt.xlabel("x [mm]")
-            plt.ylabel("y [mm]")
-            plt.colorbar(label = "Frequency")
-            plt.savefig("RCF.png", dpi = 1000)
-            plt.show()
         return positions
 
 if __name__ == "__main__":
     print("Creating proton beam...")
-    sample_beam = ProtonBeam(2e5, 10, 'central')
-    sample_beam.plot_spectrum(500)
+    sample_beam = ProtonBeam(1e7, 10, 'even')
     print("Shooting proton beam...")
     position_arr = sample_beam.send_beam_mp()
+    print("Saving result...")
+    np.savetxt("results.txt", position_arr)
+    print("Finished!")

@@ -16,11 +16,9 @@ Methods:
         finds magnetic field given density and beam fields
 """
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import axes3d
 from scipy.constants import Boltzmann as k, elementary_charge as e
 
-def beam(amp, width, mod_amp, mod_freq, num) -> np.ndarray:
+def beam(amp, width, mod_amp, mod_freq, num):
     '''
     Adds modulation to the beam shape.
     Change this for more control about the initial beam shape.
@@ -70,7 +68,7 @@ def density(rho0, decay_length, num, beam_sh) -> np.ndarray:
                 density_xyz[i, j, k] = density_arr[k]
     return density_xyz*beam_sh
 
-def grad(arr, width) -> np.array:
+def grad(arr, width):
     '''
     Gradient of function.
 
@@ -95,7 +93,7 @@ def grad(arr, width) -> np.array:
 
     return gradient
 
-def biermann_field(beam_sh, density_distr, width) -> np.array:
+def biermann_field(beam_sh, density_distr, width):
     '''
     Determines magnetic field due to Biermann battery.
 
@@ -113,32 +111,3 @@ def biermann_field(beam_sh, density_distr, width) -> np.array:
     grad_temp = grad_beam
     magnetic_field = k/(e*density_distr)*np.cross(grad_temp, grad_density, axis = 3)
     return magnetic_field
-
-if __name__ == "__main__":
-    # Parameters
-    RHO0 = 0.2
-    DECAY_LENGTH = 0.2
-    AMP = 0.1
-    MOD_AMP = 0.5
-    MOD_FREQ = 10
-    WIDTH = 0.1
-    NUM = 20
-
-    mod_beam = beam(AMP, WIDTH, MOD_AMP, MOD_FREQ, NUM)
-    densities = density(RHO0, DECAY_LENGTH, NUM, mod_beam)
-
-    bf = biermann_field(mod_beam, densities, WIDTH)
-
-    x_arr = np.linspace(-1.5*WIDTH, 1.5*WIDTH, NUM)
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    x, y, z = np.meshgrid(x_arr, x_arr, x_arr)
-    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=0.001,
-              linewidth = 2, arrow_length_ratio = 0.3)
-    x, y = np.meshgrid(x_arr, x_arr)
-    ax.plot_surface(x, y, mod_beam[:, :, 0], cmap = "Oranges")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
-    plt.show()
