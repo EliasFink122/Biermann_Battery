@@ -47,7 +47,7 @@ def beam(xyz, amp, spec_amp, width) -> float:
 
     return base_beam + spec1 + spec2
 
-def density(xyz, rho0, decay_length) -> float:
+def density(xyz, rho0, decay_length, beam_func) -> float:
     '''
     Density decay function.
 
@@ -60,9 +60,10 @@ def density(xyz, rho0, decay_length) -> float:
         density at z location in kg/m^3
     '''
     z = xyz[2]
+    beam_val = beam_func(xyz)
     if z <= 0:
         return rho0
-    return rho0 * np.exp(-z/decay_length)
+    return rho0 * np.exp(-z/decay_length)*beam_val
 
 def grad(func, coord) -> np.array:
     '''
@@ -112,8 +113,9 @@ if __name__ == "__main__":
     SPEC_AMP = 1
     WIDTH = 0.1
 
-    density_distr = lambda xyz: density(xyz, rho0 = RHO0, decay_length = DECAY_LENGTH)
     beam_sh = lambda xyz: beam(xyz, amp = AMP, spec_amp = SPEC_AMP, width = WIDTH)
+    density_distr = lambda xyz: density(xyz, rho0 = RHO0,
+                                        decay_length = DECAY_LENGTH, beam_func = beam_sh)
 
     NUM = 20
     NUMZ = 10

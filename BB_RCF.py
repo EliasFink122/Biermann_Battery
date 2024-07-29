@@ -204,8 +204,8 @@ class ProtonBeam():
     NUM = 50 # physics resolution
 
     if MODE == "realistic":
-        density_distr_real = density(RHO0, DECAY_LENGTH, NUM)
         beam_sh_real = beam(AMP, WIDTH, MOD_AMP, MOD_FREQ, NUM)
+        density_distr_real = density(RHO0, DECAY_LENGTH, NUM, beam_sh_real)
         biermann = biermann_field(beam_sh_real, density_distr_real, WIDTH)
 
     def __init__(self, n_protons = 100, temperature = 10, distribution = 'even'):
@@ -218,12 +218,12 @@ class ProtonBeam():
         self.__protons: list[Proton] = []
         temperature *= 1e6
         for _ in range(int(n_protons)):
-            origin = [0, 0.1, 1]
+            origin = [0, 0, 1]
             speed = maxwell(temp = temperature)
             if distribution == 'even':
-                spread = np.sqrt(np.random.rand())*np.pi/100
+                spread = np.sqrt(np.random.rand())*np.arctan(ProtonBeam.WIDTH*6/origin[2])
             elif distribution == 'central':
-                spread = np.random.rand()*np.pi/50
+                spread = np.random.rand()*np.arctan(ProtonBeam.WIDTH*1.2/origin[2])
             elif distribution == 'edge':
                 spread = np.sqrt(np.sqrt(np.random.rand()))*np.pi/20
             traj = np.random.rand()*2*np.pi
@@ -276,7 +276,8 @@ class ProtonBeam():
         Returns:
             density value
         '''
-        return density(xyz, rho0 = ProtonBeam.RHO0, decay_length = ProtonBeam.DECAY_LENGTH)
+        return density(xyz, rho0 = ProtonBeam.RHO0, decay_length = ProtonBeam.DECAY_LENGTH,
+                       beam_func = self.beam_sh)
     def beam_sh(self, xyz) -> float:
         '''
         Beam shape

@@ -47,7 +47,7 @@ def beam(amp, width, mod_amp, mod_freq, num) -> np.ndarray:
     ideal_beam = amp*np.exp(-((xyz[:, :, :, 0]**2 + xyz[:, :, :, 1]**2)/(2*width**2))**5)
     return np.abs(ideal_beam * modulation)
 
-def density(rho0, decay_length, num) -> np.ndarray:
+def density(rho0, decay_length, num, beam_sh) -> np.ndarray:
     '''
     Density decay function.
 
@@ -68,7 +68,7 @@ def density(rho0, decay_length, num) -> np.ndarray:
         for j, y in enumerate(zs):
             for k, z in enumerate(zs):
                 density_xyz[i, j, k] = density_arr[k]
-    return density_xyz
+    return density_xyz*beam_sh
 
 def grad(arr, width) -> np.array:
     '''
@@ -124,8 +124,8 @@ if __name__ == "__main__":
     WIDTH = 0.1
     NUM = 20
 
-    densities = density(RHO0, DECAY_LENGTH, NUM)
     mod_beam = beam(AMP, WIDTH, MOD_AMP, MOD_FREQ, NUM)
+    densities = density(RHO0, DECAY_LENGTH, NUM, mod_beam)
 
     bf = biermann_field(mod_beam, densities, WIDTH)
 
