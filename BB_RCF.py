@@ -188,7 +188,7 @@ class ProtonBeam():
         send_beam_mp (MCP):
             shoot protons one at a time and plot final positions
     '''
-    RHO0 = 2 # base density
+    RHO0 = 1e8 # base density
     DECAY_LENGTH = 0.5 # density decay length scale
     AMP = 0.1 # beam amplitude
     WIDTH = 0.1 # beam width
@@ -291,7 +291,7 @@ class ProtonBeam():
                         width = ProtonBeam.WIDTH)
 
     # Single core processing
-    def propagate(self, rc = False):
+    def propagate(self, time: float, rc = False):
         '''
         Propagate proton beam along
 
@@ -300,13 +300,13 @@ class ProtonBeam():
         '''
         for proton in self.__protons:
             if MODE == "simple":
-                magnetic = biermann_field(proton.pos(), self.beam_sh, self.density_distr)
+                magnetic = time*biermann_field(proton.pos(), self.beam_sh, self.density_distr)
             elif MODE == "realistic":
                 xs = np.linspace(-1.5*ProtonBeam.WIDTH, 1.5*ProtonBeam.WIDTH, ProtonBeam.NUM)
                 x_coord = np.argmin(xs - proton.pos()[0])
                 y_coord = np.argmin(xs - proton.pos()[1])
                 z_coord = np.argmin(xs - proton.pos()[2])
-                magnetic = ProtonBeam.biermann[x_coord, y_coord, z_coord]
+                magnetic = time*ProtonBeam.biermann[x_coord, y_coord, z_coord]
             proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD, rc = rc)
     def send_beam(self, plot = True, rc = False) -> np.ndarray:
         '''
@@ -321,8 +321,10 @@ class ProtonBeam():
         '''
         positions = []
         detected = 0
+        time = 0
         while True:
-            self.propagate(rc = rc)
+            time += ProtonBeam.TIME_INCREMEMT
+            self.propagate(time = time, rc = rc)
             for i, proton in enumerate(self.__protons):
                 for_removal = []
                 if proton.pos()[2] <= 0:
@@ -351,25 +353,26 @@ class ProtonBeam():
         return positions
 
     # Multi core processing
-    def propagate_one(self, proton: Proton, rc = False) -> Proton:
+    def propagate_one(self, proton: Proton, time: float, rc = False) -> Proton:
         '''
         Propagate one proton by one time step
 
         Args:
             proton: proton object to propagate
+            time: time in simulation
             rc: whether to engage relativistic correction
 
         Returns:
             updated proton object
         '''
         if MODE == "simple":
-            magnetic = biermann_field(proton.pos(), self.beam_sh, self.density_distr)
+            magnetic = time*biermann_field(proton.pos(), self.beam_sh, self.density_distr)
         elif MODE == "realistic":
             xs = np.linspace(-1.5*ProtonBeam.WIDTH, 1.5*ProtonBeam.WIDTH, ProtonBeam.NUM)
             x_coord = np.argmin(xs - proton.pos()[0])
             y_coord = np.argmin(xs - proton.pos()[1])
             z_coord = np.argmin(xs - proton.pos()[2])
-            magnetic = ProtonBeam.biermann[x_coord, y_coord, z_coord]
+            magnetic = time*ProtonBeam.biermann[x_coord, y_coord, z_coord]
         proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD, rc = rc)
         return proton
     def shoot_at_target(self, proton: Proton, rc = False) -> list[float]:
@@ -383,8 +386,10 @@ class ProtonBeam():
         Returns:
             final position of proton
         '''
+        time = 0
         while True:
-            proton = self.propagate_one(proton, rc = rc)
+            time += ProtonBeam.TIME_INCREMEMT
+            proton = self.propagate_one(proton, time = time, rc = rc)
             if proton.pos()[2] <= 0:
                 #print(f"Proton detected at {proton.pos()[:2]}.")
                 return proton.pos()[:2]

@@ -18,6 +18,7 @@ Methods:
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
+from scipy.constants import Boltzmann as k, elementary_charge as e
 
 def beam(amp, width, mod_amp, mod_freq, num) -> np.ndarray:
     '''
@@ -110,7 +111,7 @@ def biermann_field(beam_sh, density_distr, width) -> np.array:
     grad_beam = grad(beam_sh, width)
     grad_density = grad(density_distr, width)
     grad_temp = grad_beam
-    magnetic_field = np.cross(grad_temp, grad_density, axis = 3)
+    magnetic_field = k/(e*density_distr)*np.cross(grad_temp, grad_density, axis = 3)
     return magnetic_field
 
 if __name__ == "__main__":
