@@ -297,6 +297,7 @@ class ProtonBeam():
         Propagate proton beam along
 
         Args:
+            time: time in simulation
             rc: whether to engage relativistic correction
         '''
         for proton in self.__protons:
