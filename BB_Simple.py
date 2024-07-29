@@ -16,6 +16,7 @@ Methods:
         finds magnetic field given density and beam fields
 """
 import numpy as np
+from scipy.constants import Boltzmann as k, elementary_charge as e
 
 def beam(xyz, amp, spec_amp, width):
     '''
@@ -44,7 +45,7 @@ def beam(xyz, amp, spec_amp, width):
 
     return base_beam + spec1 + spec2
 
-def density(xyz, rho0, decay_length):
+def density(xyz, rho0, decay_length, beam_func) -> float:
     '''
     Density decay function.
 
@@ -57,9 +58,10 @@ def density(xyz, rho0, decay_length):
         density at z location in kg/m^3
     '''
     z = xyz[2]
+    beam_val = beam_func(xyz)
     if z <= 0:
         return rho0
-    return rho0 * np.exp(-z/decay_length)
+    return rho0 * np.exp(-z/decay_length)*beam_val
 
 def grad(func, coord):
     '''
@@ -89,15 +91,14 @@ def biermann_field(xyz, beam_shape, density_func):
 
     Args:
         xyz: 3-d position
-        temp_func: function of temperature distribution
+        beam_shape: function of beam intensity distribution
         density_func: function of density distribution
 
     Returns:
         magnetic field
     '''
-    temperature = beam_shape
     grad_density = np.array(grad(density_func, xyz))
-    grad_temp = np.array(grad(temperature, xyz))
-    magnetic_field = np.cross(grad_density, grad_temp)
+    grad_temp = np.array(grad(beam_shape, xyz))
+    magnetic_field = k/(e*density_func(xyz))*np.cross(grad_density, grad_temp)
 
     return magnetic_field
