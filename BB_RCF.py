@@ -20,7 +20,7 @@ Classes:
 from multiprocessing import Pool
 import numpy as np
 from scipy.constants import elementary_charge as e, proton_mass as m_p, speed_of_light as c
-MODE = "realistic"
+MODE = "simple"
 if MODE == "simple":
     from BB_Simple import beam, density, biermann_field
 elif MODE == "realistic":
@@ -258,7 +258,7 @@ class ProtonBeam():
         Returns:
             density value
         '''
-        return density(xyz, rho0 = ProtonBeam.RHO0, decay_length = ProtonBeam.DECAY_LENGTH,
+        return density(xyz, decay_length = ProtonBeam.DECAY_LENGTH,
                        beam_func = self.beam_sh)
     def beam_sh(self, xyz) -> float:
         '''
@@ -283,7 +283,7 @@ class ProtonBeam():
         '''
         for proton in self.__protons:
             if MODE == "simple":
-                magnetic = time*biermann_field(proton.pos(), self.beam_sh, self.density_distr)
+                magnetic = time*ProtonBeam.RHO0*biermann_field(proton.pos(), self.beam_sh, self.density_distr)
             elif MODE == "realistic":
                 xs = np.linspace(-1.5*ProtonBeam.WIDTH, 1.5*ProtonBeam.WIDTH, ProtonBeam.NUM)
                 x_coord = np.argmin(xs - proton.pos()[0])
@@ -339,7 +339,7 @@ class ProtonBeam():
             updated proton object
         '''
         if MODE == "simple":
-            magnetic = time*biermann_field(proton.pos(), self.beam_sh, self.density_distr)
+            magnetic = time*ProtonBeam.RHO0*biermann_field(proton.pos(), self.beam_sh, self.density_distr)
         elif MODE == "realistic":
             xs = np.linspace(-1.5*ProtonBeam.WIDTH, 1.5*ProtonBeam.WIDTH, ProtonBeam.NUM)
             x_coord = np.argmin(xs - proton.pos()[0])
@@ -398,7 +398,7 @@ class ProtonBeam():
 
 if __name__ == "__main__":
     print("Creating proton beam...")
-    sample_beam = ProtonBeam(1e7, 10, 'even')
+    sample_beam = ProtonBeam(1e5, 10, 'even')
     print("Shooting proton beam...")
     position_arr = sample_beam.send_beam_mp()
     print("Saving result...")

@@ -33,7 +33,7 @@ def plot_data(data):
     '''
     plt.figure()
     plt.title("Simulated RCF")
-    plt.hist2d(data[:, 0]*1000, data[:, 1]*1000, bins = 1000)
+    plt.hist2d(data[:, 0]*1000, data[:, 1]*1000, bins = 500)
     plt.xlabel("x [mm]")
     plt.ylabel("y [mm]")
     plt.show()

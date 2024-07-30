@@ -45,13 +45,12 @@ def beam(xyz, amp, spec_amp, width):
 
     return base_beam + spec1 + spec2
 
-def density(xyz, rho0, decay_length, beam_func) -> float:
+def density(xyz, decay_length, beam_func) -> float:
     '''
     Density decay function.
 
     Args:
         z: distance away from target surface in m
-        rho0: maximum density at surface
         decay_length: length scale over which density decays by factor of 1/e
 
     Returns:
@@ -60,8 +59,8 @@ def density(xyz, rho0, decay_length, beam_func) -> float:
     z = xyz[2]
     beam_val = beam_func(xyz)
     if z <= 0:
-        return rho0
-    return rho0 * np.exp(-z/decay_length)*beam_val
+        return 1
+    return 1 * np.exp(-z/decay_length)*beam_val
 
 def grad(func, coord):
     '''
