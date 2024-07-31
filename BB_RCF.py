@@ -189,18 +189,18 @@ class ProtonBeam():
         send_beam_mp (MCP):
             shoot protons one at a time and plot final positions
     '''
-    RHO0 = 1e8 # base density
+    RHO0 = 1 # base density
     DECAY_LENGTH = 0.5 # density decay length scale
-    AMP = 0.1 # beam amplitude
+    AMP = 0 # beam amplitude
     WIDTH = 0.1 # beam width
     TIME_INCREMEMT = 1e-11 # simulation time step
     E_FIELD = [0, 0, 0] # electric field to keep protons from turning around
 
     # Simple mode
-    SPEC_AMP = 0.05 # speckle amplitude
+    SPEC_AMP = 2 # speckle amplitude
 
     # Realistic mode
-    MOD_AMP = 2 # modulation amplitude
+    MOD_AMP = 1 # modulation amplitude
     MOD_FREQ = 10 # modulation frequency
     NUM = 50 # physics resolution
 
@@ -368,7 +368,7 @@ class ProtonBeam():
                 return proton.pos()[:2]
 
             moving_backwards = proton.vel()[2] >= 0
-            out_of_screen = not (np.abs(proton.pos()[0]) < 0.75 and np.abs(proton.pos()[1]) < 1.5)
+            out_of_screen = not (np.abs(proton.pos()[0]) < 1.5 and np.abs(proton.pos()[1]) < 1.5)
             if moving_backwards or out_of_screen:
                 print("Warning: Proton out of scope")
                 return None
