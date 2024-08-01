@@ -19,12 +19,10 @@ class ProtonBeam():
     Proton beam
 
     Methods:
+        calculate_fields:
+            determine fields for all timesteps
         create_proton:
             create proton with certain speed (thermal MB distribution)
-        protons:
-            get hidden protons array attribute
-        plot_spectrum:
-            plots proton speed spectrum and beam distribution at target
         propagate_one:
             propagate only one proton by one time step
         shoot_at_target:
@@ -37,7 +35,6 @@ class ProtonBeam():
     AMP = 0 # beam amplitude
     WIDTH = 0.1 # beam width
     TIME_INCREMEMT = 1e-10 # simulation time step
-    E_FIELD = [0, 0, 0] # electric field to keep protons from turning around
 
     MOD_AMP = 1 # modulation amplitude
     MOD_FREQ = 10 # modulation frequency
@@ -69,11 +66,12 @@ class ProtonBeam():
                        ProtonBeam.MOD_FREQ, ProtonBeam.NUM)
 
         density_distr = density(0, ProtonBeam.RHO0, ProtonBeam.DECAY_LENGTH,
-                                     ProtonBeam.NUM) + 1
+                                     ProtonBeam.NUM, d = 0.0001) + 1
         temp_distr = temperature(0, beam_sh, width = ProtonBeam.WIDTH) + 1
 
 
-        for n in range(1000):
+        for n in range(100):
+            print(n)
             time = n*ProtonBeam.TIME_INCREMEMT
             density_distr = density(time, ProtonBeam.RHO0, ProtonBeam.DECAY_LENGTH,
                                      ProtonBeam.NUM, temp_distr) + 1
@@ -130,7 +128,7 @@ class ProtonBeam():
         proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, electric)
 
         return proton
-    def shoot_at_target(self, i) -> list[float]:
+    def shoot_at_target(self, i):
         '''
         Shoot one proton at target
 

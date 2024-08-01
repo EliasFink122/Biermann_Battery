@@ -14,7 +14,7 @@ Methods:
 import numpy as np
 import matplotlib.pyplot as plt
 
-def read_in(path = "results.txt"):
+def read_in(path = "results_1e2.0_even.txt"):
     '''
     Read in txt file
 
