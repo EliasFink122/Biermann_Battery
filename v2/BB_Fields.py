@@ -17,7 +17,7 @@ Methods:
 """
 import numpy as np
 from scipy.constants import Boltzmann as kb, elementary_charge as e
-from BB_Tools import grad, curl, integrate_dx
+from BB_Tools import grad, div, curl, integrate_dx
 
 def beam(amp, width, mod_amp, mod_freq, num):
     '''
@@ -72,7 +72,8 @@ def density(time, rho0, decay_length, num, beam_sh) -> np.ndarray:
                 density_xyz[i, j, k] = density_arr[k]
     return density_xyz*beam_sh
 
-def temperature(time, beam_sh, c_tilde = 1) -> np.ndarray:
+def temperature(time, beam_sh, c_tilde = 1, temp_init = None,
+                d = 1, width = None) -> np.ndarray:
     '''
     Density decay function.
 
@@ -80,15 +81,21 @@ def temperature(time, beam_sh, c_tilde = 1) -> np.ndarray:
         time: time in simulation
         beam_sh: laser beam
         c_tilde: heat capacity per area
+        temp_init: previous temperature distribution
+        d: heat transmission coefficient
+        width: beam width
 
     Returns:
         temperature distribution in K
     '''
-    temp = time*beam_sh/c_tilde
+    if temp_init is None:
+        temp = time*beam_sh/c_tilde
+    else:
+        temp = time*beam_sh/c_tilde + d*div(grad(temp_init, width), width)
     return temp
 
 
-def magnetic_field(time, beam_sh, density_distr, width):
+def magnetic_field(time, beam_sh, density_distr, width) -> np.ndarray:
     '''
     Determines magnetic field due to Biermann battery.
 
@@ -107,9 +114,9 @@ def magnetic_field(time, beam_sh, density_distr, width):
     magnetic = time*kb/(e*density_distr)*np.cross(grad_temp, grad_density, axis = 3)
     return magnetic
 
-def electric_field(time, temp_distr, density_distr, width):
+def electric_field(temp_distr: np.ndarray, density_distr: np.ndarray, width: float) -> np.ndarray:
     '''
-    Determines magnetic field due to Biermann battery.
+    Determines electric field due to Biermann battery.
 
     Args:
         time: time in simulation
@@ -123,5 +130,6 @@ def electric_field(time, temp_distr, density_distr, width):
     grad_temp = grad(temp_distr, width)
     grad_density = grad(density_distr, width)
     lapl_electric = -kb/(e*density_distr)*curl(np.cross(grad_temp, grad_density, axis = 3), width)
-    electric = integrate_dx(integrate_dx(lapl_electric, width))
+    electric = integrate_dx(integrate_dx(lapl_electric.transpose(2, 0, 1, 3),
+                                         width), width).transpose(1, 2, 0, 3)
     return electric

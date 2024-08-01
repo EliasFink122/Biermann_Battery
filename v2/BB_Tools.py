@@ -42,6 +42,32 @@ def grad(arr, width) -> np.ndarray:
                                                 gradient_12d[2, i, j, k]])
     return gradient
 
+def div(arr, width) -> np.ndarray:
+    '''
+    Curl of 3D vector field.
+    
+    Args:
+        arr: array of beam or density
+        width: array width
+
+    Returns:
+        curl of array
+    '''
+    arr = np.array(arr)
+    vx = arr[:, :, :, 0]
+    vy = arr[:, :, :, 1]
+    vz = arr[:, :, :, 2]
+
+    div_arr = np.zeros((len(arr), len(arr[0]), len(arr[0, 0])))
+    for i in range(1, len(arr)-1):
+        for j in range(1, len(arr[0])-1):
+            for k in range(1, len(arr[0, 0])-1):
+                dx = vx[i+1, j, k] - vx[i-1, j, k]
+                dy = vy[i, j+1, k] - vy[i, j-1, k]
+                dz = vz[i, j, k+1] - vz[i, j, k-1]
+                div_arr[i, j, k] = (dx*len(arr) + dy*len(arr[0]) + dz*len(arr[0, 0]))/width
+    return div_arr
+
 def curl(arr, width) -> np.ndarray:
     '''
     Curl of 3D vector field.
