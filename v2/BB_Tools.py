@@ -18,9 +18,9 @@ Classes:
 from scipy.constants import elementary_charge as e, proton_mass as m_p
 import numpy as np
 
-def grad(arr, width):
+def grad(arr, width) -> np.ndarray:
     '''
-    Gradient of function.
+    Gradient of scalar field.
 
     Args:
         arr: array of beam or density
@@ -41,6 +41,40 @@ def grad(arr, width):
                                                 gradient_12d[1, i, j, k],
                                                 gradient_12d[2, i, j, k]])
     return gradient
+
+def curl(arr, width) -> np.ndarray:
+    '''
+    Curl of 3D vector field.
+    
+    Args:
+        arr: array of beam or density
+        width: beam width
+
+    Returns:
+        curl of array
+    '''
+    arr = np.array(arr)
+    vx = arr[:, :, :, 0]
+    vy = arr[:, :, :, 1]
+    vz = arr[:, :, :, 2]
+
+    curl_arr = np.zeros((len(arr), len(arr[0]), len(arr[0, 0]), 3))
+    for i in range(1, len(arr)-1):
+        for j in range(1, len(arr[0])-1):
+            for k in range(1, len(arr[0, 0])-1):
+                cx = (vz[i, j+1, k] - vz[i, j-1, k]) - (vy[i, j, k+1] - vy[i, j, k-1])
+                cy = (vx[i, j, k+1] - vx[i, j, k-1]) - (vz[i+1, j, k] - vz[i-1, j, k])
+                cz = (vy[i+1, j, k] - vy[i-1, j, k]) - (vx[i, j+1, k] - vx[i, j-1, k])
+                curl_arr[i, j, k] = [cx*len(arr), cy*len(arr[0]), cz*len(arr[0, 0])]/width
+    return curl_arr
+
+def integrate_dx(arr, width):
+    '''
+    Integrate field dx.
+
+
+    '''
+    dx = 
 
 def maxwell(temp = 1e7):
     '''

@@ -17,7 +17,7 @@ Methods:
 """
 import numpy as np
 from scipy.constants import Boltzmann as kb, elementary_charge as e
-from BB_Tools import grad
+from BB_Tools import grad, curl
 
 def beam(amp, width, mod_amp, mod_freq, num):
     '''
@@ -26,6 +26,7 @@ def beam(amp, width, mod_amp, mod_freq, num):
 
     Args:
         mod_amp: amplitude of modulation
+        width: beam width
         mod_freq: frequency of modulation
         num: resolution
 
@@ -46,14 +47,16 @@ def beam(amp, width, mod_amp, mod_freq, num):
     ideal_beam = amp*np.exp(-((xyz[:, :, :, 0]**2 + xyz[:, :, :, 1]**2)/(2*width**2))**5)
     return np.abs(ideal_beam * modulation)
 
-def density(rho0, decay_length, num, beam_sh) -> np.ndarray:
+def density(time, rho0, decay_length, num, beam_sh) -> np.ndarray:
     '''
     Density decay function.
 
     Args:
+        time: time in simulation
         rho0: maximum density at surface
         decay_length: length scale over which density decays by factor of 1/e
         num: resolution
+        beam_sh: shape of laser beam
 
     Returns:
         density at z location in kg/m^3
@@ -69,12 +72,28 @@ def density(rho0, decay_length, num, beam_sh) -> np.ndarray:
                 density_xyz[i, j, k] = density_arr[k]
     return density_xyz*beam_sh
 
-def biermann_field(beam_sh, density_distr, width):
+def temperature(time, beam_sh, c_tilde = 1) -> np.ndarray:
+    '''
+    Density decay function.
+
+    Args:
+        time: time in simulation
+        beam_sh: laser beam
+        c_tilde: heat capacity per area
+
+    Returns:
+        temperature distribution in K
+    '''
+    temp = time*beam_sh/c_tilde
+    return temp
+
+
+def magnetic_field(time, beam_sh, density_distr, width):
     '''
     Determines magnetic field due to Biermann battery.
 
     Args:
-        xyz: 3-d position
+        time: time in simulation
         temp_func: function of temperature distribution
         density_func: function of density distribution
         width: beam width
@@ -85,5 +104,24 @@ def biermann_field(beam_sh, density_distr, width):
     grad_beam = grad(beam_sh, width)
     grad_density = grad(density_distr, width)
     grad_temp = grad_beam
-    magnetic_field = kb/(e*density_distr)*np.cross(grad_temp, grad_density, axis = 3)
-    return magnetic_field
+    magnetic = time*kb/(e*density_distr)*np.cross(grad_temp, grad_density, axis = 3)
+    return magnetic
+
+def electric_field(time, temp_distr, density_distr, width):
+    '''
+    Determines magnetic field due to Biermann battery.
+
+    Args:
+        time: time in simulation
+        temp_distr: function of temperature distribution
+        density_distr: function of density distribution
+        width: beam width
+
+    Returns:
+        electric field
+    '''
+    grad_temp = grad(temp_distr, width)
+    grad_density = grad(density_distr, width)
+    lapl_electric = -kb/(e*density_distr)*curl(np.cross(grad_temp, grad_density, axis = 3), width)
+    electric = 
+    return electric

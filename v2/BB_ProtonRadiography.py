@@ -12,7 +12,7 @@ Classes:
 from multiprocessing import Pool
 import numpy as np
 from BB_Tools import maxwell, Proton
-from BB_Fields import beam, density, biermann_field
+from BB_Fields import beam, density, magnetic_field, electric_field
 
 class ProtonBeam():
     '''
@@ -43,9 +43,7 @@ class ProtonBeam():
     MOD_FREQ = 10 # modulation frequency
     NUM = 50 # physics resolution
 
-    beam_sh_real = beam(AMP, WIDTH, MOD_AMP, MOD_FREQ, NUM)
-    density_distr_real = density(RHO0, DECAY_LENGTH, NUM, beam_sh_real)
-    biermann = biermann_field(beam_sh_real, density_distr_real, WIDTH)
+    beam_sh = beam(AMP, WIDTH, MOD_AMP, MOD_FREQ, NUM)
 
     def __init__(self, n_protons = 100, temperature = 10, distribution = 'even'):
         '''
@@ -94,8 +92,18 @@ class ProtonBeam():
         x_coord = np.argmin(xs - proton.pos()[0])
         y_coord = np.argmin(xs - proton.pos()[1])
         z_coord = np.argmin(xs - proton.pos()[2])
-        magnetic = time*ProtonBeam.biermann[x_coord, y_coord, z_coord]
-        proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD)
+        density_distr_real = density(time, ProtonBeam.RHO0, ProtonBeam.DECAY_LENGTH,
+                                     ProtonBeam.NUM, ProtonBeam.beam_sh)
+        
+        # Fields
+        magnetic_arr = magnetic_field(time, ProtonBeam.beam_sh, density_distr_real,
+                                      ProtonBeam.WIDTH)
+        magnetic = magnetic_arr[x_coord, y_coord, z_coord]
+        electric_arr = electric_field(time, ProtonBeam.beam_sh, density_distr_real,
+                                      ProtonBeam.WIDTH)
+        electric = electric_arr[x_coord, y_coord, z_coord]
+        proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, electric)
+
         return proton
     def shoot_at_target(self, i) -> list[float]:
         '''
