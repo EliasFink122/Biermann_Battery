@@ -16,7 +16,8 @@ Methods:
         finds magnetic field given density and beam fields
 """
 import numpy as np
-from scipy.constants import Boltzmann as k, elementary_charge as e
+from scipy.constants import Boltzmann as kb, elementary_charge as e
+from BB_Tools import grad
 
 def beam(amp, width, mod_amp, mod_freq, num):
     '''
@@ -62,35 +63,11 @@ def density(rho0, decay_length, num, beam_sh) -> np.ndarray:
     for i, z_pos in enumerate(zs):
         density_arr[i] = rho0 * np.exp(-z_pos/decay_length)
     density_xyz = np.zeros((num, num, num))
-    for i, x in enumerate(zs):
-        for j, y in enumerate(zs):
-            for k, z in enumerate(zs):
+    for i, _ in enumerate(zs):
+        for j, _ in enumerate(zs):
+            for k, _ in enumerate(zs):
                 density_xyz[i, j, k] = density_arr[k]
     return density_xyz*beam_sh
-
-def grad(arr, width):
-    '''
-    Gradient of function.
-
-    Args:
-        arr: array of beam or density
-        width: beam width
-
-    Returns:
-        gradient of array
-    '''
-    spacing = 3*width/len(arr)
-
-    gradient_12d = np.array(np.gradient(arr, spacing))
-
-    gradient = np.zeros((len(gradient_12d[0]), len(gradient_12d[0]), len(gradient_12d[0]), 3))
-    for i, row1 in enumerate(gradient):
-        for j, row2 in enumerate(row1):
-            for k, _ in enumerate(row2):
-                gradient[i, j, k] = np.array([gradient_12d[0, i, j, k],
-                                                gradient_12d[1, i, j, k],
-                                                gradient_12d[2, i, j, k]])
-    return gradient
 
 def biermann_field(beam_sh, density_distr, width):
     '''
@@ -108,5 +85,5 @@ def biermann_field(beam_sh, density_distr, width):
     grad_beam = grad(beam_sh, width)
     grad_density = grad(density_distr, width)
     grad_temp = grad_beam
-    magnetic_field = k/(e*density_distr)*np.cross(grad_temp, grad_density, axis = 3)
+    magnetic_field = kb/(e*density_distr)*np.cross(grad_temp, grad_density, axis = 3)
     return magnetic_field

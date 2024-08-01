@@ -12,7 +12,7 @@ Classes:
 from multiprocessing import Pool
 import numpy as np
 from BB_Tools import maxwell, Proton
-from BB_Realistic import beam, density, biermann_field
+from BB_Fields import beam, density, biermann_field
 
 class ProtonBeam():
     '''
@@ -25,11 +25,11 @@ class ProtonBeam():
             get hidden protons array attribute
         plot_spectrum:
             plots proton speed spectrum and beam distribution at target
-        propagate_one (MCP):
+        propagate_one:
             propagate only one proton by one time step
-        shoot_at_target (MCP):
+        shoot_at_target:
             propagate one proton repeatedly until it hits the target and record position
-        send_beam_mp (MCP):
+        send_beam:
             shoot protons one at a time and plot final positions
     '''
     RHO0 = 10 # base density
@@ -56,8 +56,10 @@ class ProtonBeam():
         '''
         self.__temperature = temperature*1e6
         self.__distribution = distribution
-        self.__n_protons = n_protons
-    def create_proton(self, i):
+        self.__n_protons = int(n_protons)
+        self.__fname = f'results_n{n_protons}_{distribution}.txt'
+        np.savetxt(self.__fname, np.array([]))
+    def create_proton(self):
         '''
         Create one proton only
 
@@ -106,21 +108,22 @@ class ProtonBeam():
         Returns:
             final position of proton
         '''
-        time = 0
-        proton = self.create_proton(i)
-        while True:
-            time += ProtonBeam.TIME_INCREMEMT
-            proton = self.propagate_one(proton, time = time)
-            if proton.pos()[2] <= 0:
-                #print(f"Proton detected at {proton.pos()[:2]}.")
-                return proton.pos()[:2]
+        with open(self.__fname, 'w', encoding='utf-8') as f:
+            time = 0
+            proton = self.create_proton()
+            while True:
+                time += ProtonBeam.TIME_INCREMEMT
+                proton = self.propagate_one(proton, time = time)
+                if proton.pos()[2] <= 0:
+                    np.savetxt(f, proton.pos()[:2])
+                    break
 
-            moving_backwards = proton.vel()[2] >= 0
-            out_of_screen = not (np.abs(proton.pos()[0]) < 1.5 and np.abs(proton.pos()[1]) < 1.5)
-            if moving_backwards or out_of_screen:
-                print("Warning: Proton out of scope")
-                return None
-    def send_beam_mp(self):
+                moving_backwards = proton.vel()[2] >= 0
+                out_of_screen = np.abs(proton.pos()[0]) > 1.5 or np.abs(proton.pos()[1]) > 1.5
+                if moving_backwards or out_of_screen:
+                    print(f"Warning: Proton {i} out of scope")
+                    break
+    def send_beam(self):
         '''
         Send beam through magnetic field and record on RCF behind target using multiprocessing.
 
@@ -131,15 +134,8 @@ class ProtonBeam():
             final positions of protons
         '''
         with Pool() as pool:
-            positions = pool.map(self.shoot_at_target, range(self.__n_protons))
+            pool.map(self.shoot_at_target, range(self.__n_protons))
 
-        # Remove None values
-        for_removal = []
-        for i, pos in enumerate(positions):
-            if pos is None or None in pos:
-                for_removal.append(i)
-        for i in reversed(for_removal):
-            positions.pop(i)
-
-        positions = np.array(positions)
-        return positions
+if __name__ == "__main__":
+    proton_beam = ProtonBeam(1e6, 10, 'even')
+    proton_beam.send_beam()
