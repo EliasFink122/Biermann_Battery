@@ -48,7 +48,7 @@ def curl(arr, width) -> np.ndarray:
     
     Args:
         arr: array of beam or density
-        width: beam width
+        width: array width
 
     Returns:
         curl of array
@@ -68,13 +68,24 @@ def curl(arr, width) -> np.ndarray:
                 curl_arr[i, j, k] = [cx*len(arr), cy*len(arr[0]), cz*len(arr[0, 0])]/width
     return curl_arr
 
-def integrate_dx(arr, width):
+def integrate_dx(arr, width) -> np.ndarray:
     '''
     Integrate field dx.
 
+    Args:
+        arr: array of beam or density
+        width: array width
 
+    Returns:
+        spatial integral of array
     '''
-    dx = 
+    arr = np.array(arr)
+    dx = width/len(arr)
+    integral = np.zeros((len(arr), len(arr[0]), len(arr[0, 0]), 3))
+    for i, row in enumerate(row):
+        for j in range(i):
+            integral[i] += arr[j]*dx
+    return integral
 
 def maxwell(temp = 1e7):
     '''

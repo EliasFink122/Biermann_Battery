@@ -17,7 +17,7 @@ Methods:
 """
 import numpy as np
 from scipy.constants import Boltzmann as kb, elementary_charge as e
-from BB_Tools import grad, curl
+from BB_Tools import grad, curl, integrate_dx
 
 def beam(amp, width, mod_amp, mod_freq, num):
     '''
@@ -123,5 +123,5 @@ def electric_field(time, temp_distr, density_distr, width):
     grad_temp = grad(temp_distr, width)
     grad_density = grad(density_distr, width)
     lapl_electric = -kb/(e*density_distr)*curl(np.cross(grad_temp, grad_density, axis = 3), width)
-    electric = 
+    electric = integrate_dx(integrate_dx(lapl_electric, width))
     return electric
