@@ -48,7 +48,7 @@ def beam(amp, width, mod_amp, mod_freq, num):
     ideal_beam = amp*np.exp(-((xyz[:, :, :, 0]**2 + xyz[:, :, :, 1]**2)/(2*width**2))**5)
     return np.abs(ideal_beam * modulation)
 
-def density(time, rho0, decay_length, num, temp, d = 1) -> np.ndarray:
+def density(time, rho0, decay_length, num, temp = None, d = 1) -> np.ndarray:
     '''
     Density distribution.
 
@@ -78,27 +78,31 @@ def density(time, rho0, decay_length, num, temp, d = 1) -> np.ndarray:
         for j, _ in enumerate(zs):
             for k, _ in enumerate(zs):
                 density_xyz[i, j, k] = density_arr[k]
+    if temp is None:
+        return density_xyz
     return density_xyz*np.sqrt(temp/np.max(temp))
 
-def temperature(time, beam_sh, dens, c_tilde = 1, temp_init = None,
-                alpha = 1, width = None) -> np.ndarray:
+def temperature(time, beam_sh, c_tilde = 1, temp_init = None,
+                alpha = 1, width = None, dens = None) -> np.ndarray:
     '''
     Temperature distribution.
 
     Args:
         time: time in simulation
         beam_sh: laser beam
-        dens: density distribution
         c_tilde: heat capacity per area
         temp_init: previous temperature distribution
         alpha: heat transmission coefficient
         width: beam width
+        dens: density distribution
 
     Returns:
         temperature distribution in K
     '''
     if temp_init is None:
         temp = time*beam_sh/c_tilde
+    elif dens is None:
+        temp = time*(beam_sh/(c_tilde) + alpha*div(grad(temp_init, width), width))
     else:
         temp = time*(beam_sh/(c_tilde*dens/np.max(dens)) + alpha*div(grad(temp_init, width), width))
     return temp
