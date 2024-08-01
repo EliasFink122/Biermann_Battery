@@ -189,7 +189,7 @@ class ProtonBeam():
         send_beam_mp (MCP):
             shoot protons one at a time and plot final positions
     '''
-    RHO0 = 1 # base density
+    RHO0 = 10 # base density
     DECAY_LENGTH = 0.5 # density decay length scale
     AMP = 0 # beam amplitude
     WIDTH = 0.1 # beam width
