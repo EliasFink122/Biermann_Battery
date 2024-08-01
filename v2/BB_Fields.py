@@ -17,6 +17,7 @@ Methods:
 """
 import numpy as np
 from scipy.constants import Boltzmann as kb, elementary_charge as e
+from scipy.special import erf
 from BB_Tools import grad, div, curl, integrate_dx
 
 def beam(amp, width, mod_amp, mod_freq, num):
@@ -47,42 +48,50 @@ def beam(amp, width, mod_amp, mod_freq, num):
     ideal_beam = amp*np.exp(-((xyz[:, :, :, 0]**2 + xyz[:, :, :, 1]**2)/(2*width**2))**5)
     return np.abs(ideal_beam * modulation)
 
-def density(time, rho0, decay_length, num, beam_sh) -> np.ndarray:
+def density(time, rho0, decay_length, num, temp, d = 1) -> np.ndarray:
     '''
-    Density decay function.
+    Density distribution.
 
     Args:
         time: time in simulation
         rho0: maximum density at surface
         decay_length: length scale over which density decays by factor of 1/e
         num: resolution
-        beam_sh: shape of laser beam
+        temp: temperature distribution
+        d: diffusion coefficient
 
     Returns:
         density at z location in kg/m^3
     '''
-    zs = np.linspace(0, 5*decay_length, num)
+    zs = np.linspace(-5*decay_length, 5*decay_length, num)
     density_arr = np.zeros((len(zs)))
-    for i, z_pos in enumerate(zs):
-        density_arr[i] = rho0 * np.exp(-z_pos/decay_length)
+    if time == 0:
+        for i, z_pos in enumerate(zs):
+            if z_pos >= 0:
+                density_arr[i] = rho0
+            else:
+                density_arr[i] = 0
+    else:
+        density_arr = rho0*(erf(zs/(2*np.sqrt(d*time)))+1)
     density_xyz = np.zeros((num, num, num))
     for i, _ in enumerate(zs):
         for j, _ in enumerate(zs):
             for k, _ in enumerate(zs):
                 density_xyz[i, j, k] = density_arr[k]
-    return density_xyz*beam_sh
+    return density_xyz*np.sqrt(temp/np.max(temp))
 
-def temperature(time, beam_sh, c_tilde = 1, temp_init = None,
-                d = 1, width = None) -> np.ndarray:
+def temperature(time, beam_sh, dens, c_tilde = 1, temp_init = None,
+                alpha = 1, width = None) -> np.ndarray:
     '''
-    Density decay function.
+    Temperature distribution.
 
     Args:
         time: time in simulation
         beam_sh: laser beam
+        dens: density distribution
         c_tilde: heat capacity per area
         temp_init: previous temperature distribution
-        d: heat transmission coefficient
+        alpha: heat transmission coefficient
         width: beam width
 
     Returns:
@@ -91,11 +100,10 @@ def temperature(time, beam_sh, c_tilde = 1, temp_init = None,
     if temp_init is None:
         temp = time*beam_sh/c_tilde
     else:
-        temp = time*beam_sh/c_tilde + d*div(grad(temp_init, width), width)
+        temp = time*(beam_sh/(c_tilde*dens/np.max(dens)) + alpha*div(grad(temp_init, width), width))
     return temp
 
-
-def magnetic_field(time, beam_sh, density_distr, width) -> np.ndarray:
+def magnetic_field(time, temp_distr, density_distr, width) -> np.ndarray:
     '''
     Determines magnetic field due to Biermann battery.
 
@@ -108,9 +116,8 @@ def magnetic_field(time, beam_sh, density_distr, width) -> np.ndarray:
     Returns:
         magnetic field
     '''
-    grad_beam = grad(beam_sh, width)
+    grad_temp = grad(temp_distr, width)
     grad_density = grad(density_distr, width)
-    grad_temp = grad_beam
     magnetic = time*kb/(e*density_distr)*np.cross(grad_temp, grad_density, axis = 3)
     return magnetic
 
