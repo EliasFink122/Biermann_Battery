@@ -84,7 +84,7 @@ def density(time, rho0, decay_length, num, temp = None, d = 1) -> np.ndarray:
         return density_xyz
     return density_xyz*np.sqrt(temp/np.max(temp))
 
-def temperature(time, beam_sh, c_tilde = 1, temp_init = None,
+def temperature(time_inc, beam_sh, c_tilde = 1, temp_init = None,
                 alpha = 1, width = None, dens = None) -> np.ndarray:
     '''
     Temperature distribution.
@@ -102,11 +102,11 @@ def temperature(time, beam_sh, c_tilde = 1, temp_init = None,
         temperature distribution in K
     '''
     if temp_init is None:
-        temp = time*beam_sh/c_tilde
+        temp = time_inc*beam_sh/c_tilde
     elif dens is None:
-        temp = time*(beam_sh/(c_tilde) + alpha*div(grad(temp_init, width), width))
+        temp = temp_init + time_inc*(beam_sh/(c_tilde) + alpha*div(grad(temp_init, width), width))
     else:
-        temp = time*(beam_sh/(c_tilde*dens/np.max(dens)) + alpha*div(grad(temp_init, width), width))
+        temp = temp_init + time_inc*(beam_sh/(c_tilde*dens/np.max(dens)) + alpha*div(grad(temp_init, width), width))
     return temp
 
 def magnetic_field(time, temp_distr, density_distr, width) -> np.ndarray:
