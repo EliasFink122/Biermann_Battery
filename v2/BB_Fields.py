@@ -20,7 +20,7 @@ Methods:
 import numpy as np
 from scipy.constants import Boltzmann as kb, elementary_charge as e
 from scipy.special import erf
-from BB_Tools import grad, div, curl, integrate_dx
+from BB_Tools import expand3d, grad, div, curl, integrate_dx
 
 def beam(amp, width, mod_amp, mod_freq, num):
     '''
@@ -124,7 +124,7 @@ def magnetic_field(time, temp_distr, density_distr, width) -> np.ndarray:
     '''
     grad_temp = grad(temp_distr, width)
     grad_density = grad(density_distr, width)
-    magnetic = time*kb/(e*density_distr)*np.cross(grad_temp, grad_density, axis = 3)
+    magnetic = expand3d(time*kb/(e*density_distr)) * np.cross(grad_temp, grad_density, axis = 3)
     return magnetic
 
 def electric_field(temp_distr: np.ndarray, density_distr: np.ndarray, width: float) -> np.ndarray:
@@ -142,7 +142,7 @@ def electric_field(temp_distr: np.ndarray, density_distr: np.ndarray, width: flo
     '''
     grad_temp = grad(temp_distr, width)
     grad_density = grad(density_distr, width)
-    lapl_electric = -kb/(e*density_distr)*curl(np.cross(grad_temp, grad_density, axis = 3), width)
+    lapl_electric = -expand3d(kb/(e*density_distr))*curl(np.cross(grad_temp, grad_density, axis = 3), width)
     electric = integrate_dx(integrate_dx(lapl_electric.transpose(2, 0, 1, 3),
                                          width), width).transpose(1, 2, 0, 3)
     return electric

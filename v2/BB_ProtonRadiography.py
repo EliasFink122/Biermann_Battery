@@ -55,11 +55,11 @@ class ProtonBeam():
         self.__temperature = temp*1e6
         self.__distribution = distribution
         self.__n_protons = int(n_protons)
-        self.__fname = f'results_n{n_protons}_{distribution}.txt'
+        self.__fname = f'results_1e{np.log10(n_protons):.1f}_{distribution}.txt'
 
         self.__density_distr = density(0, ProtonBeam.RHO0, ProtonBeam.DECAY_LENGTH,
-                                     ProtonBeam.NUM, ProtonBeam.beam_sh)
-        self.__temp_distr = temperature(0, ProtonBeam.beam_sh, width = ProtonBeam.WIDTH)
+                                     ProtonBeam.NUM, ProtonBeam.beam_sh) + 1
+        self.__temp_distr = temperature(0, ProtonBeam.beam_sh, width = ProtonBeam.WIDTH) + 1
 
         np.savetxt(self.__fname, np.array([]))
     def create_proton(self):
@@ -101,9 +101,9 @@ class ProtonBeam():
 
         # Physical parameters
         self.__density_distr = density(time, ProtonBeam.RHO0, ProtonBeam.DECAY_LENGTH,
-                                     ProtonBeam.NUM, self.__temp_distr)
+                                     ProtonBeam.NUM, self.__temp_distr) + 1
         self.__temp_distr = temperature(time, ProtonBeam.beam_sh, temp_init = self.__temp_distr,
-                                        width = ProtonBeam.WIDTH, dens = self.__density_distr)
+                                        width = ProtonBeam.WIDTH, dens = self.__density_distr) + 1
 
         # Motion
         magnetic_arr = magnetic_field(time, self.__temp_distr, self.__density_distr,

@@ -6,6 +6,8 @@ Created on Thu Aug 01 2024
 Tools for simulations.
 
 Methods:
+    expand3d:
+        expand scalar field to 3d vector field
     grad:
         finds gradient of scalar field
     div:
@@ -23,6 +25,23 @@ Classes:
 """
 from scipy.constants import elementary_charge as e, proton_mass as m_p
 import numpy as np
+
+def expand3d(arr):
+    '''
+    Expand scalar field to 3D to multiply
+
+    Args:
+        arr: scalar field
+
+    Returns:
+        expanded vector field
+    '''
+    vec = np.zeros((len(arr), len(arr[0]), len(arr[0, 0]), 3))
+    for i, _ in enumerate(vec):
+        for j, _ in enumerate(vec):
+            for k, _ in enumerate(vec):
+                vec[i, j, k] = [arr[i, j, k]]*3
+    return vec
 
 def grad(arr, width) -> np.ndarray:
     '''
@@ -97,7 +116,7 @@ def curl(arr, width) -> np.ndarray:
                 cx = (vz[i, j+1, k] - vz[i, j-1, k]) - (vy[i, j, k+1] - vy[i, j, k-1])
                 cy = (vx[i, j, k+1] - vx[i, j, k-1]) - (vz[i+1, j, k] - vz[i-1, j, k])
                 cz = (vy[i+1, j, k] - vy[i-1, j, k]) - (vx[i, j+1, k] - vx[i, j-1, k])
-                curl_arr[i, j, k] = [cx*len(arr), cy*len(arr[0]), cz*len(arr[0, 0])]/width
+                curl_arr[i, j, k] = np.array([cx*len(arr), cy*len(arr[0]), cz*len(arr[0, 0])])/width
     return curl_arr
 
 def integrate_dx(arr, width) -> np.ndarray:
@@ -114,7 +133,7 @@ def integrate_dx(arr, width) -> np.ndarray:
     arr = np.array(arr)
     dx = width/len(arr)
     integral = np.zeros((len(arr), len(arr[0]), len(arr[0, 0]), 3))
-    for i, row in enumerate(row):
+    for i, _ in enumerate(arr):
         for j in range(i):
             integral[i] += arr[j]*dx
     return integral
