@@ -7,7 +7,13 @@ Tools for simulations.
 
 Methods:
     grad:
-        finds gradient vector of scalar field
+        finds gradient of scalar field
+    div:
+        finds divergence of vector field
+    curl:
+        finds curl of vector field
+    integrate_dx:
+        integrate function w.r.t dx (axis = 0)
     maxwell:
         random speed values according to M-B distribution
 

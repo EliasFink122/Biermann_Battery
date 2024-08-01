@@ -12,7 +12,7 @@ Classes:
 from multiprocessing import Pool
 import numpy as np
 from BB_Tools import maxwell, Proton
-from BB_Fields import beam, density, magnetic_field, electric_field
+from BB_Fields import beam, density, temperature, magnetic_field, electric_field
 
 class ProtonBeam():
     '''
@@ -45,17 +45,22 @@ class ProtonBeam():
 
     beam_sh = beam(AMP, WIDTH, MOD_AMP, MOD_FREQ, NUM)
 
-    def __init__(self, n_protons = 100, temperature = 10, distribution = 'even'):
+    def __init__(self, n_protons = 100, temp = 10, distribution = 'even'):
         '''
         Args:
             n_protons: number of protons
             temperature: proton temperature in MeV
             distribution: even, central or edge for different proton distributions
         '''
-        self.__temperature = temperature*1e6
+        self.__temperature = temp*1e6
         self.__distribution = distribution
         self.__n_protons = int(n_protons)
         self.__fname = f'results_n{n_protons}_{distribution}.txt'
+
+        self.__density_distr = density(0, ProtonBeam.RHO0, ProtonBeam.DECAY_LENGTH,
+                                     ProtonBeam.NUM, ProtonBeam.beam_sh)
+        self.__temp_distr = temperature(0, ProtonBeam.beam_sh, width = ProtonBeam.WIDTH)
+
         np.savetxt(self.__fname, np.array([]))
     def create_proton(self):
         '''
@@ -88,18 +93,23 @@ class ProtonBeam():
         Returns:
             updated proton object
         '''
+        # Position
         xs = np.linspace(-1.5*ProtonBeam.WIDTH, 1.5*ProtonBeam.WIDTH, ProtonBeam.NUM)
         x_coord = np.argmin(xs - proton.pos()[0])
         y_coord = np.argmin(xs - proton.pos()[1])
         z_coord = np.argmin(xs - proton.pos()[2])
-        density_distr_real = density(time, ProtonBeam.RHO0, ProtonBeam.DECAY_LENGTH,
-                                     ProtonBeam.NUM, ProtonBeam.beam_sh)
-        
-        # Fields
-        magnetic_arr = magnetic_field(time, ProtonBeam.beam_sh, density_distr_real,
+
+        # Physical parameters
+        self.__density_distr = density(time, ProtonBeam.RHO0, ProtonBeam.DECAY_LENGTH,
+                                     ProtonBeam.NUM, self.__temp_distr)
+        self.__temp_distr = temperature(time, ProtonBeam.beam_sh, temp_init = self.__temp_distr,
+                                        width = ProtonBeam.WIDTH, dens = self.__density_distr)
+
+        # Motion
+        magnetic_arr = magnetic_field(time, self.__temp_distr, self.__density_distr,
                                       ProtonBeam.WIDTH)
         magnetic = magnetic_arr[x_coord, y_coord, z_coord]
-        electric_arr = electric_field(time, ProtonBeam.beam_sh, density_distr_real,
+        electric_arr = electric_field(self.__temp_distr, self.__density_distr,
                                       ProtonBeam.WIDTH)
         electric = electric_arr[x_coord, y_coord, z_coord]
         proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, electric)

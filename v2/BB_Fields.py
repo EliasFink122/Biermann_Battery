@@ -12,7 +12,9 @@ Methods:
         defines density profile of plasma
     grad:
         finds gradient vector of scalar field
-    biermann_field:
+    magnetic_field:
+        finds magnetic field given density and beam fields
+    electric_field:
         finds magnetic field given density and beam fields
 """
 import numpy as np
