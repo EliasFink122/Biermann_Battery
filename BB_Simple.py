@@ -76,7 +76,7 @@ def grad(func, coord) -> np.array:
     Returns:
         gradient at position
     '''
-    res = 1e-1
+    res = 1e-5
     gradient = [0, 0, 0]
     for l in range(3):
         coord = np.array(coord)
@@ -101,7 +101,7 @@ def biermann_field(xyz, beam_shape, density_func) -> np.array:
     '''
     grad_density = np.array(grad(density_func, xyz))
     grad_temp = np.array(grad(beam_shape, xyz))
-    magnetic_field = k/(e*density_func(xyz))*np.cross(grad_density, grad_temp)
+    magnetic_field = np.cross(grad_density, grad_temp) # k/(e*density_func(xyz))*
 
     return magnetic_field
 
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     RHO0 = 10
     DECAY_LENGTH = 0.1
     AMP = 10
-    SPEC_AMP = 1
+    SPEC_AMP = 5
     WIDTH = 0.1
 
     beam_sh = lambda xyz: beam(xyz, amp = AMP, spec_amp = SPEC_AMP, width = WIDTH)
@@ -139,10 +139,10 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     x, y, z = np.meshgrid(xs, xs, zs)
-    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=0.00001,
+    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=1e-10,
               linewidth = 2, arrow_length_ratio = 0.3)
-    x, y = np.meshgrid(beam_xs, beam_xs)
-    ax.plot_surface(x, y, beam_arr, cmap = "Oranges")
+    # x, y = np.meshgrid(beam_xs, beam_xs)
+    # ax.plot_surface(x, y, beam_arr, cmap = "Oranges")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
