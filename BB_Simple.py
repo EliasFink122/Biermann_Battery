@@ -101,7 +101,8 @@ def biermann_field(xyz, beam_shape, density_func) -> np.array:
     '''
     grad_density = np.array(grad(density_func, xyz))
     grad_temp = np.array(grad(beam_shape, xyz))
-    magnetic_field = np.cross(grad_density, grad_temp) # k/(e*density_func(xyz))*
+    if e*density_func(xyz) != 0:
+        magnetic_field = k/(e*density_func(xyz))*np.cross(grad_density, grad_temp)
 
     return magnetic_field
 
@@ -139,7 +140,7 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     x, y, z = np.meshgrid(xs, xs, zs)
-    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=1e-10,
+    ax.quiver(x, y, z, bf[:, :, :, 1], bf[:, :, :, 0], bf[:, :, :, 2], length=1e-25,
               linewidth = 2, arrow_length_ratio = 0.3)
     # x, y = np.meshgrid(beam_xs, beam_xs)
     # ax.plot_surface(x, y, beam_arr, cmap = "Oranges")
