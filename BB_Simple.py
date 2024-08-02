@@ -101,9 +101,7 @@ def biermann_field(xyz, beam_shape, density_func) -> np.array:
     '''
     grad_density = np.array(grad(density_func, xyz))
     grad_temp = np.array(grad(beam_shape, xyz))
-    if e*density_func(xyz) != 0:
-        magnetic_field = k/(e*density_func(xyz))*np.cross(grad_density, grad_temp)
-
+    magnetic_field = k/(e*density_func(xyz))*np.cross(grad_density, grad_temp)
     return magnetic_field
 
 if __name__ == "__main__":
