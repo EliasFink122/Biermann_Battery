@@ -189,15 +189,15 @@ class ProtonBeam():
         send_beam_mp (MCP):
             shoot protons one at a time and plot final positions
     '''
-    RHO0 = 10 # base density
+    RHO0 = 0.1 # base density
     DECAY_LENGTH = 0.5 # density decay length scale
-    AMP = 0 # beam amplitude
+    AMP = 0.1 # beam amplitude
     WIDTH = 0.1 # beam width
     TIME_INCREMEMT = 1e-11 # simulation time step
     E_FIELD = [0, 0, 0] # electric field to keep protons from turning around
 
     # Simple mode
-    SPEC_AMP = 2 # speckle amplitude
+    SPEC_AMP = 0.05 # speckle amplitude
 
     # Realistic mode
     MOD_AMP = 1 # modulation amplitude
@@ -307,7 +307,7 @@ class ProtonBeam():
         time = 0
         while True:
             time += ProtonBeam.TIME_INCREMEMT
-            self.propagate(time = time, rc = rc)
+            self.propagate(rc = rc)
             for i, proton in enumerate(self.__protons):
                 for_removal = []
                 if proton.pos()[2] <= 0:
@@ -326,7 +326,7 @@ class ProtonBeam():
         return positions
 
     # Multi core processing
-    def propagate_one(self, proton: Proton, time: float, rc = False) -> Proton:
+    def propagate_one(self, proton: Proton, rc = False) -> Proton:
         '''
         Propagate one proton by one time step
 
@@ -339,13 +339,13 @@ class ProtonBeam():
             updated proton object
         '''
         if MODE == "simple":
-            magnetic = time*ProtonBeam.RHO0*biermann_field(proton.pos(), self.beam_sh, self.density_distr)
+            magnetic = ProtonBeam.RHO0*biermann_field(proton.pos(), self.beam_sh, self.density_distr)
         elif MODE == "realistic":
             xs = np.linspace(-1.5*ProtonBeam.WIDTH, 1.5*ProtonBeam.WIDTH, ProtonBeam.NUM)
             x_coord = np.argmin(xs - proton.pos()[0])
             y_coord = np.argmin(xs - proton.pos()[1])
             z_coord = np.argmin(xs - proton.pos()[2])
-            magnetic = time*ProtonBeam.biermann[x_coord, y_coord, z_coord]
+            magnetic = ProtonBeam.biermann[x_coord, y_coord, z_coord]
         proton.move(ProtonBeam.TIME_INCREMEMT, magnetic, ProtonBeam.E_FIELD, rc = rc)
         return proton
     def shoot_at_target(self, proton: Proton, rc = False) -> list[float]:
