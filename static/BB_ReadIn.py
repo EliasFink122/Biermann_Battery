@@ -32,10 +32,12 @@ def plot_data(data):
     Plot text file data on histogram
     '''
     plt.figure()
-    plt.title("Simulated RCF")
-    plt.hist2d(data[:, 0]*1000, data[:, 1]*1000, range = [[-200, 200], [-200, 200]], bins = 500)
+    plt.title("Simulated proton radiograph")
+    plt.hist2d(data[:, 0]*1000, data[:, 1]*1000, range = [[-200, 200], [-200, 200]], bins = 1000)
     plt.xlabel("x [mm]")
     plt.ylabel("y [mm]")
+    plt.colorbar(label = "Frequency")
+    plt.savefig("RCF.png", dpi = 1000)
     plt.show()
 
 if __name__ == "__main__":
