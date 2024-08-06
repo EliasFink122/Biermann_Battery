@@ -20,7 +20,7 @@ Classes:
 from multiprocessing import Pool
 import numpy as np
 from scipy.constants import elementary_charge as e, proton_mass as m_p, speed_of_light as c
-MODE = "simple"
+MODE = "realistic"
 if MODE == "simple":
     from BB_Simple import beam, density, biermann_field
 elif MODE == "realistic":
@@ -200,7 +200,7 @@ class ProtonBeam():
     SPEC_AMP = 10*AMP # speckle amplitude
 
     # Realistic mode
-    MOD_AMP = 1 # modulation amplitude
+    MOD_AMP = 100 # modulation amplitude
     MOD_FREQ = 10 # modulation frequency
     NUM = 50 # physics resolution
 

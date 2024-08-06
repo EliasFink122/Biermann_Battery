@@ -6,6 +6,8 @@ Created on Mon Jul 15 2024
 Realistic simulation of a Biermann battery.
 
 Methods:
+    expand3d:
+        expand scalar field to 3D vectors
     beam:
         defines beam shape
     density:
@@ -17,6 +19,23 @@ Methods:
 """
 import numpy as np
 from scipy.constants import Boltzmann as k, elementary_charge as e
+
+def expand3d(arr):
+    '''
+    Expand scalar field to 3D to multiply
+
+    Args:
+        arr: scalar field
+
+    Returns:
+        expanded vector field
+    '''
+    vec = np.zeros((len(arr), len(arr[0]), len(arr[0, 0]), 3))
+    for i, _ in enumerate(vec):
+        for j, _ in enumerate(vec):
+            for l, _ in enumerate(vec):
+                vec[i, j, l] = [arr[i, j, l]]*3
+    return vec
 
 def beam(amp, width, mod_amp, mod_freq, num):
     '''
@@ -108,5 +127,5 @@ def biermann_field(beam_sh, density_distr, width):
     grad_beam = grad(beam_sh, width)
     grad_density = grad(density_distr, width)
     grad_temp = grad_beam
-    magnetic_field = k/(e*density_distr)*np.cross(grad_temp, grad_density, axis = 3)
+    magnetic_field = k/(e*expand3d(density_distr))*np.cross(grad_temp, grad_density, axis = 3)
     return magnetic_field
