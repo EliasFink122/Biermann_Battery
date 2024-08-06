@@ -200,8 +200,8 @@ class ProtonBeam():
     SPEC_AMP = 10*AMP # speckle amplitude
 
     # Realistic mode
-    MOD_AMP = 100 # modulation amplitude
-    MOD_FREQ = 10 # modulation frequency
+    MOD_AMP = 57 # modulation amplitude
+    MOD_FREQ = 20 # modulation frequency
     NUM = 50 # physics resolution
 
     if MODE == "realistic":
@@ -398,7 +398,7 @@ class ProtonBeam():
 
 if __name__ == "__main__":
     print("Creating proton beam...")
-    sample_beam = ProtonBeam(1e6, 10, 'even')
+    sample_beam = ProtonBeam(1e5, 10, 'even')
     print("Shooting proton beam...")
     position_arr = sample_beam.send_beam_mp()
     print("Saving result...")
