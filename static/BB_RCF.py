@@ -191,7 +191,7 @@ class ProtonBeam():
     '''
     RHO0 = 0.1 # base density
     DECAY_LENGTH = 0.5 # density decay length scale
-    AMP = 1e2 # beam amplitude
+    AMP = 1e1 # beam amplitude
     WIDTH = 0.1 # beam width
     TIME_INCREMEMT = 1e-11 # simulation time step
     E_FIELD = [0, 0, 0] # electric field to keep protons from turning around
@@ -398,7 +398,7 @@ class ProtonBeam():
 
 if __name__ == "__main__":
     print("Creating proton beam...")
-    sample_beam = ProtonBeam(1e5, 10, 'even')
+    sample_beam = ProtonBeam(4e5, 10, 'even')
     print("Shooting proton beam...")
     position_arr = sample_beam.send_beam_mp()
     print("Saving result...")
