@@ -10,6 +10,7 @@ Methods:
         read in tif image
 """
 import numpy as np
+import scipy.ndimage as ndi
 from PIL import Image
 import matplotlib.pyplot as plt
 
@@ -39,11 +40,12 @@ def lineout(img: np.ndarray) -> np.ndarray:
     Returns:
         lineout
     '''
-    l = np.zeros(int(len(img)/2)+1)
+    com = ndi.center_of_mass(img)
+    l = np.zeros(len(img))
     for i, row in enumerate(img):
         for j, val in enumerate(row):
-            x = i - len(img)/2
-            y = j - len(row)/2
+            x = i - com[0]
+            y = j - com[1]
             index = int(np.sqrt(x**2 + y**2))
             if index < len(l):
                 l[index] += val
@@ -79,10 +81,10 @@ def show(arr: np.ndarray):
 
 if __name__ == '__main__':
     filenames = ["AB_EF_avg_bg.tif", "GH_IJ_avg_bg.tif", "Run_5_evt_6_alvium_0.tiff",
-                 "Run_6_evt_6_alvium_0.tiff", "Run_7_evt_6_alvium_0.tiff",
-                 "Run_8_evt_6_alvium_0.tiff", "Run_10_evt_6_alvium_0.tiff",
-                 "Run_11_evt_6_alvium_0.tiff", "Run_13_evt_6_alvium_0.tiff"]
-    PATHNAME = "Phase_Plate_Data/" + filenames[2]
+                 "Run_7_evt_6_alvium_0.tiff", "Run_8_evt_6_alvium_0.tiff",
+                 "Run_10_evt_6_alvium_0.tiff", "Run_11_evt_6_alvium_0.tiff",
+                 "Run_13_evt_6_alvium_0.tiff"]
+    PATHNAME = "Phase_Plate_Data/" + filenames[7]
     image = read_in(PATHNAME)
-    # line = lineout(image)
-    show(image)
+    line = lineout(image)
+    show(line)
