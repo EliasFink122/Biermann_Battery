@@ -20,7 +20,7 @@ Classes:
 from multiprocessing import Pool
 import numpy as np
 from scipy.constants import elementary_charge as e, proton_mass as m_p, speed_of_light as c
-MODE = "realistic"
+MODE = "simple"
 if MODE == "simple":
     from BB_Simple import beam, density, biermann_field
 elif MODE == "realistic":
@@ -191,7 +191,7 @@ class ProtonBeam():
     '''
     RHO0 = 0.1 # base density
     DECAY_LENGTH = 0.5 # density decay length scale
-    AMP = 1e1 # beam amplitude
+    AMP = 1e2 # beam amplitude
     WIDTH = 0.1 # beam width
     TIME_INCREMEMT = 1e-11 # simulation time step
     E_FIELD = [0, 0, 0] # electric field to keep protons from turning around
@@ -228,12 +228,12 @@ class ProtonBeam():
         Returns:
             proton object
         '''
-        origin = [0, 0, 1]
+        origin = [0.1, 0, 1]
         speed = maxwell(temp = self.__temperature)
         if self.__distribution == 'even':
-            spread = np.sqrt(np.random.rand())*np.pi/20
+            spread = np.sqrt(np.random.rand())*np.pi/100
         elif self.__distribution == 'central':
-            spread = np.random.rand()*np.pi/20
+            spread = np.random.rand()*np.pi/100
         elif self.__distribution == 'edge':
             spread = np.sqrt(np.sqrt(np.random.rand()))*np.pi/20
         traj = np.random.rand()*2*np.pi
@@ -398,7 +398,7 @@ class ProtonBeam():
 
 if __name__ == "__main__":
     print("Creating proton beam...")
-    sample_beam = ProtonBeam(4e5, 10, 'even')
+    sample_beam = ProtonBeam(4e5, 10, 'central')
     print("Shooting proton beam...")
     position_arr = sample_beam.send_beam_mp()
     print("Saving result...")
