@@ -54,8 +54,6 @@ class ProtonBeam():
 
         self.__b_fields = []
         self.__e_fields = []
-
-        np.savetxt(self.__fname, np.array([]))
     def calculate_fields(self):
         '''
         Calculate fields for all time steps
@@ -139,22 +137,20 @@ class ProtonBeam():
             final position of proton
         '''
         print(i)
-        with open(self.__fname, 'w', encoding='utf-8') as f:
-            time = 0
-            proton = self.create_proton()
-            while True:
-                proton = self.propagate_one(proton, time = time)
-                if proton.pos()[2] <= 0:
-                    np.savetxt(f, proton.pos()[:2])
-                    break
+        time = 0
+        proton = self.create_proton()
+        while True:
+            proton = self.propagate_one(proton, time = time)
+            if proton.pos()[2] <= 0:
+                return proton.pos()[:2]
 
-                moving_backwards = proton.vel()[2] >= 0
-                out_of_screen = np.abs(proton.pos()[0]) > 1.5 or np.abs(proton.pos()[1]) > 1.5
-                timeout = time >= len(self.__b_fields)
-                if moving_backwards or out_of_screen or timeout:
-                    print(f"Warning: Proton {i} out of scope")
-                    break
-                time += 1
+            moving_backwards = proton.vel()[2] >= 0
+            out_of_screen = np.abs(proton.pos()[0]) > 1.5 or np.abs(proton.pos()[1]) > 1.5
+            timeout = time >= len(self.__b_fields)
+            if moving_backwards or out_of_screen or timeout:
+                print(f"Warning: Proton {i} out of scope")
+                break
+            time += 1
     def send_beam(self):
         '''
         Send beam through magnetic field and record on RCF behind target using multiprocessing.
@@ -167,7 +163,17 @@ class ProtonBeam():
         '''
         print("Sending beam...")
         with Pool() as pool:
-            pool.map(self.shoot_at_target, range(self.__n_protons))
+            positions = pool.map(self.shoot_at_target, range(self.__n_protons))
+        
+        for_removal = []
+        for i, pos in enumerate(positions):
+            if pos is None or None in pos:
+                for_removal.append(i)
+        for i in reversed(for_removal):
+            positions.pop(i)
+
+        positions = np.array(positions)
+        np.savetxt(self.__fname, positions)
 
 if __name__ == "__main__":
     proton_beam = ProtonBeam(1e2, 10, 'even')
