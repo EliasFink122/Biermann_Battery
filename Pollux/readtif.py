@@ -42,7 +42,7 @@ def lineout(img: np.ndarray) -> np.ndarray:
         lineout
     '''
     com = ndi.center_of_mass(img)
-    l = np.zeros(len(img))
+    l = np.zeros(int(len(img)/2))
     for i, row in enumerate(img):
         for j, val in enumerate(row):
             x = i - com[0]
@@ -104,8 +104,8 @@ if __name__ == '__main__':
                  "Run_10_evt_6_alvium_0.tiff", "Run_11_evt_6_alvium_0.tiff",
                  "Run_13_evt_6_alvium_0.tiff"]
     DIRECTORY = "Phase_Plate_Data"
-    PATHNAME = DIRECTORY + "/" + filenames[7]
-    # image = read_in(PATHNAME)
-    # line = lineout(image)
-    # show(line)
-    loop_directory(DIRECTORY)
+    PATHNAME = DIRECTORY + "/" + filenames[3]
+    image = read_in(PATHNAME)
+    line = lineout(image)
+    show(line)
+    # loop_directory(DIRECTORY)
