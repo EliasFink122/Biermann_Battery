@@ -164,7 +164,7 @@ class ProtonBeam():
         print("Sending beam...")
         with Pool() as pool:
             positions = pool.map(self.shoot_at_target, range(self.__n_protons))
-        
+
         for_removal = []
         for i, pos in enumerate(positions):
             if pos is None or None in pos:
