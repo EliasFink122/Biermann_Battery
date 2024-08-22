@@ -46,10 +46,12 @@ def lineout(img: np.ndarray) -> np.ndarray:
         for j, val in enumerate(row):
             x = i - com[0]
             y = j - com[1]
+            if x**2 + y**2 == 0:
+                continue
             index = int(np.sqrt(x**2 + y**2))
             if index < len(l):
-                l[index] += val
-    return np.array(l)/len(l)
+                l[index] += val/(2*np.pi*np.sqrt(x**2 + y**2))
+    return np.array(l)
 
 def show(arr: np.ndarray):
     '''
