@@ -9,6 +9,7 @@ Methods:
     read_in:
         read in tif image
 """
+import os
 import numpy as np
 import scipy.ndimage as ndi
 from PIL import Image
@@ -81,12 +82,30 @@ def show(arr: np.ndarray):
     else:
         raise ValueError("Input array needs to be one or two dimensional.")
 
+def loop_directory(dname: str):
+    '''
+    Loop through directory and save intensities and lineouts
+
+    Args:
+        dname: path to directory
+    '''
+    for file in os.listdir(os.fsencode(dname)):
+        fname = os.fsdecode(file)
+        if fname.endswith(".tif") or fname.endswith(".tiff"):
+            print(f"Processing {fname} ...")
+            img = read_in(dname + "/" + fname)
+            np.savetxt("Outputs/intensity_" + fname.split('.')[0] + ".txt", img)
+            lout = lineout(img)
+            np.savetxt("Outputs/lineout_" + fname.split('.')[0] + ".txt", lout)
+
 if __name__ == '__main__':
     filenames = ["AB_EF_avg_bg.tif", "GH_IJ_avg_bg.tif", "Run_5_evt_6_alvium_0.tiff",
                  "Run_7_evt_6_alvium_0.tiff", "Run_8_evt_6_alvium_0.tiff",
                  "Run_10_evt_6_alvium_0.tiff", "Run_11_evt_6_alvium_0.tiff",
                  "Run_13_evt_6_alvium_0.tiff"]
-    PATHNAME = "Phase_Plate_Data/" + filenames[7]
-    image = read_in(PATHNAME)
-    line = lineout(image)
-    show(line)
+    DIRECTORY = "Phase_Plate_Data"
+    PATHNAME = DIRECTORY + "/" + filenames[7]
+    # image = read_in(PATHNAME)
+    # line = lineout(image)
+    # show(line)
+    loop_directory(DIRECTORY)
