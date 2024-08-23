@@ -189,7 +189,7 @@ class ProtonBeam():
         send_beam_mp (MCP):
             shoot protons one at a time and plot final positions
     '''
-    RHO0 = 0.1 # base density
+    RHO0 = 0.05 # base density
     DECAY_LENGTH = 0.5 # density decay length scale
     AMP = 1e2 # beam amplitude
     WIDTH = 0.1 # beam width
@@ -228,12 +228,12 @@ class ProtonBeam():
         Returns:
             proton object
         '''
-        origin = [0.1, 0, 1]
+        origin = [0, 0, 1]
         speed = maxwell(temp = self.__temperature)
         if self.__distribution == 'even':
-            spread = np.sqrt(np.random.rand())*np.pi/100
+            spread = np.sqrt(np.random.rand())*np.pi/20
         elif self.__distribution == 'central':
-            spread = np.random.rand()*np.pi/100
+            spread = np.random.rand()*np.pi/20
         elif self.__distribution == 'edge':
             spread = np.sqrt(np.sqrt(np.random.rand()))*np.pi/20
         traj = np.random.rand()*2*np.pi
@@ -398,7 +398,7 @@ class ProtonBeam():
 
 if __name__ == "__main__":
     print("Creating proton beam...")
-    sample_beam = ProtonBeam(4e5, 10, 'central')
+    sample_beam = ProtonBeam(4e5, 10, 'even')
     print("Shooting proton beam...")
     position_arr = sample_beam.send_beam_mp()
     print("Saving result...")

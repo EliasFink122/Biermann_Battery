@@ -36,7 +36,7 @@ def beam(xyz, amp, spec_amp, width):
     base_beam = amp * np.exp(-(np.linalg.norm(xy)**2/(2*width**2))**5)
 
     # Specs
-    spec_loc = 1/2 # fraction of width
+    spec_loc = 1/3 # fraction of width
     spec_size = 1/4 # fraction of width
     spec1_pos = np.array([-width*spec_loc, 0])
     spec2_pos = np.array([width*spec_loc, 0])

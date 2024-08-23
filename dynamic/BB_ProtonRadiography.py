@@ -176,6 +176,6 @@ class ProtonBeam():
         np.savetxt(self.__fname, positions)
 
 if __name__ == "__main__":
-    proton_beam = ProtonBeam(1e2, 10, 'even')
+    proton_beam = ProtonBeam(1e4, 10, 'even')
     proton_beam.calculate_fields()
     proton_beam.send_beam()

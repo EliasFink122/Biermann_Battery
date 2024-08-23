@@ -66,8 +66,9 @@ def show(arr: np.ndarray):
     '''
     if len(np.shape(arr)) == 1:
         plt.figure()
-        plt.title("Lineout")
-        plt.plot(range(len(arr)), arr)
+        x = np.array(range(len(arr)))
+        plt.title("Lineout of laser intensity")
+        plt.plot(x, arr, label='Data')
         plt.xlabel("R [A.U]")
         plt.ylabel("Intensity [A.U]")
         plt.show()
